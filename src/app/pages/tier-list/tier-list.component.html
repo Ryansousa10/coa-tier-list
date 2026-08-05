@@ -69,13 +69,32 @@
     </div>
     <p class="metric-hint">{{ metricDescription() }}</p>
   </div>
+
+  <div class="filter-group">
+    <span class="filter-label">Perfil de Dano</span>
+    <div class="chips">
+      @for (p of damageProfiles; track p.key) {
+        <button class="chip" [class.active]="damageProfile() === p.key" (click)="damageProfile.set(p.key)"
+                [title]="p.hint">
+          {{ p.label }}
+        </button>
+      }
+    </div>
+    <p class="metric-hint">{{ damageProfileDescription() }}</p>
+  </div>
 </section>
 
 @if (loading()) {
   <div class="loading">Carregando dados…</div>
 } @else {
   @if (totalSpecs() === 0) {
-    <div class="loading">Sem dados de logs para esta combinação de filtros.</div>
+    <div class="loading">
+      Sem dados de logs para esta combinação de filtros.
+      @if (damageProfile() !== 'blended') {
+        <br />O perfil "{{ damageProfile() === 'aoe' ? 'AoE' : 'Single-Alvo' }}" só tem dados separados para
+        alguns conteúdos (dungeons, principalmente) — tente o perfil "Geral".
+      }
+    </div>
   }
   <section class="tier-table">
     @for (group of tiers(); track group.tier) {
@@ -102,6 +121,7 @@
                 <span class="score">
                   {{ fmt(e.score) }} {{ metricLabel() }}
                   @if (e.lowSample) { <span class="low-sample" title="Menos de 5 parses — dados pouco confiáveis">⚠</span> }
+                  @if (e.highVariance) { <span class="high-variance" [title]="varianceHint(e)">🔥</span> }
                 </span>
               </div>
             </a>
@@ -115,6 +135,6 @@
     Tiers relativos ao melhor desempenho do filtro atual ·
     {{ totalSpecs() }} specs ranqueadas · Dados de
     <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">coa.ascensionlogs.gg</a>
-    · ⚠ = amostra pequena
+    · ⚠ = amostra pequena · 🔥 = desempenho puxado por picos (provável dano em área — veja os filtros de Perfil de Dano)
   </p>
 }

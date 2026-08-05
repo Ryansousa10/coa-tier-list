@@ -10,18 +10,21 @@ const TIER_THRESHOLDS: { tier: TierEntry['tier']; min: number }[] = [
 ];
 
 const LOW_SAMPLE = 5;
+/** p95/mediana acima disso indica desempenho muito puxado por picos (geralmente AoE) */
+const HIGH_VARIANCE_RATIO = 2.5;
 
 @Injectable({ providedIn: 'root' })
 export class TierService {
   /** Chave do combo em stats.json para o filtro selecionado */
   comboKey(f: TierFilter): string {
+    const suffix = f.damageProfile === 'single' ? '-st' : f.damageProfile === 'aoe' ? '-aoe' : '';
     switch (f.content) {
       case 'raid':
-        return `raid-zg-${f.difficulty}-${f.role}`;
+        return `raid-zg-${f.difficulty}-${f.role}${suffix}`;
       case 'dungeons':
-        return `dungeons-p${f.phase}-${f.difficulty}-${f.role}`;
+        return `dungeons-p${f.phase}-${f.difficulty}-${f.role}${suffix}`;
       case 'worldboss':
-        return `worldboss-p${f.phase}-${f.role}`;
+        return `worldboss-p${f.phase}-${f.role}${suffix}`;
     }
   }
 
@@ -41,6 +44,7 @@ export class TierService {
         if (!stats) continue;
         const score = f.metric === 'p95' ? (stats.p95 ?? stats.max) : (stats.p50 ?? stats.median);
         if (!score || score <= 0) continue;
+        const highVariance = !!(stats.p95 && stats.median && stats.p95 / stats.median >= HIGH_VARIANCE_RATIO);
         entries.push({
           cls,
           spec,
@@ -48,6 +52,7 @@ export class TierService {
           stats,
           score,
           lowSample: stats.parses < LOW_SAMPLE,
+          highVariance,
         });
       }
     }

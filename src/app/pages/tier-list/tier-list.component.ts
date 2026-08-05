@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { DataService } from '../../data.service';
 import { TierService } from '../../tier.service';
-import { ClassInfo, ContentType, Role, StatsFile, TierEntry, TierFilter } from '../../models';
+import { ClassInfo, ContentType, DamageProfile, Role, StatsFile, TierEntry, TierFilter } from '../../models';
 
 @Component({
   selector: 'app-tier-list',
@@ -22,6 +22,7 @@ export class TierListComponent implements OnInit {
   phase = signal(1);
   role = signal<Role>('dps');
   metric = signal<'median' | 'p95'>('median');
+  damageProfile = signal<DamageProfile>('blended');
 
   readonly contents: { key: ContentType; label: string }[] = [
     { key: 'raid', label: "Raid — Zul'Gurub" },
@@ -44,6 +45,11 @@ export class TierListComponent implements OnInit {
     { key: 'healer', label: 'Healer', icon: '✚' },
     { key: 'support', label: 'Suporte', icon: '✦' },
   ];
+  readonly damageProfiles: { key: DamageProfile; label: string; hint: string }[] = [
+    { key: 'blended', label: 'Geral', hint: 'Todos os alvos da luta (boss + adds), como a luta acontece na prática.' },
+    { key: 'single', label: 'Single-Alvo', hint: 'Só o dano no boss, sem contar adds — mostra o real dano single-target da spec.' },
+    { key: 'aoe', label: 'AoE', hint: 'Só dano em trash/adds — mostra o real potencial de dano em área da spec. Poucos combates têm esse dado separado.' },
+  ];
 
   filter = computed<TierFilter>(() => ({
     content: this.content(),
@@ -51,6 +57,7 @@ export class TierListComponent implements OnInit {
     phase: this.phase(),
     role: this.role(),
     metric: this.metric(),
+    damageProfile: this.damageProfile(),
   }));
 
   tiers = computed(() => {
@@ -66,6 +73,10 @@ export class TierListComponent implements OnInit {
     this.metric() === 'median'
       ? 'Desempenho típico: metade dos parses registrados fica acima desse valor, metade abaixo. Reflete como a spec performa "na prática", com builds e execução médias.'
       : 'Desempenho de teto: valor que 95% dos parses ficam abaixo dele (percentil 95). Mostra o potencial máximo da spec quando bem jogada e bem equipada, sem contar os parses excepcionais do topo.',
+  );
+
+  damageProfileDescription = computed(
+    () => this.damageProfiles.find(p => p.key === this.damageProfile())?.hint ?? '',
   );
 
   constructor(
@@ -100,6 +111,11 @@ export class TierListComponent implements OnInit {
 
   barWidth(e: TierEntry): string {
     return `${Math.max(4, Math.round(e.relative * 100))}%`;
+  }
+
+  varianceHint(e: TierEntry): string {
+    const ratio = e.stats.p95 && e.stats.median ? (e.stats.p95 / e.stats.median).toFixed(1) : '?';
+    return `Desempenho muito variável entre lutas (topo é ${ratio}x a média) — essa spec provavelmente se destaca em fases com dano em área. Confira os filtros "Single-Alvo" e "AoE" pra ver o dano isolado.`;
   }
 
   onIconError(ev: Event) {

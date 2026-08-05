@@ -49,6 +49,8 @@ export interface TierEntry {
   relative: number; // 0..1 em relação ao topo
   tier: 'S' | 'A' | 'B' | 'C' | 'D';
   lowSample: boolean;
+  /** p95 muito acima da mediana — desempenho puxado por picos, geralmente dano em área */
+  highVariance: boolean;
 }
 
 export interface BisItem {
@@ -90,10 +92,13 @@ export interface BisFile {
   slots: BisSlot[];
 }
 
+export type DamageProfile = 'blended' | 'single' | 'aoe';
+
 export interface TierFilter {
   content: ContentType;
   difficulty: string; // raid: ascended|mythic|heroic|normal — dungeons: normal|mythic
   phase: number;      // dungeons/worldboss: 1|0
   role: Role;
   metric: 'median' | 'p95';
+  damageProfile: DamageProfile;
 }

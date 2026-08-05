@@ -27,6 +27,9 @@ Os dados brutos ficam em `tools/data/raw/`:
 - `ascensionlogs-data.json` — estatísticas agregadas extraídas da API interna
   `https://coa.ascensionlogs.gg/api/statistics` (todas as combinações de
   fase/dificuldade/função), mais `class-specs` e `phases`.
+- `ascensionlogs-data2.json` — as mesmas combinações, mas com o parâmetro
+  `damageMode` (`boss-only`/`trash`), usado para separar dano single-target de
+  dano em área (AoE) no filtro "Perfil de Dano".
 - `bisbeard-meta.json` — classes, specs, pesos de atributos (`defaultWeights`),
   regras de equipamento e roles, extraídos do bundle do BisBeard.
 - `bisbeard-items-p1.json` — banco de itens da Fase 1 (manifest público em
@@ -50,6 +53,11 @@ Para cada filtro (conteúdo × dificuldade × função), a pontuação de cada s
 **mediana** dos parses (ou o **p95** no modo "Topo"), normalizada pela melhor
 spec: S ≥ 85 %, A ≥ 68 %, B ≥ 50 %, C ≥ 32 %, D < 32 %. Specs com menos de 5
 parses recebem o aviso ⚠ (amostra pequena).
+
+O filtro "Perfil de Dano" (Geral/Single-Alvo/AoE) usa o parâmetro `damageMode`
+da API do AscensionLogs pra isolar dano só-no-boss de dano em adds/trash —
+specs cujo p95 é muito maior que a mediana no perfil "Geral" (≥ 2,5×, geralmente
+por causa de fases com AoE) recebem o aviso 🔥.
 
 ## Cálculo do BIS
 

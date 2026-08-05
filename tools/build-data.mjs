@@ -17,6 +17,14 @@ const logs = JSON.parse(fs.readFileSync(path.join(RAW, 'ascensionlogs-data.json'
 const meta = JSON.parse(fs.readFileSync(path.join(RAW, 'bisbeard-meta.json'), 'utf8'));
 const items = JSON.parse(fs.readFileSync(path.join(RAW, 'bisbeard-items-p1.json'), 'utf8'));
 
+// dados extras: mesmas combinações + variantes por perfil de dano
+// (-st = Boss Only/single-target, -aoe = Trash Only) — ver damageMode na API.
+const extraStatsPath = path.join(RAW, 'ascensionlogs-data2.json');
+if (fs.existsSync(extraStatsPath)) {
+  const extra = JSON.parse(fs.readFileSync(extraStatsPath, 'utf8'));
+  logs.stats = { ...logs.stats, ...extra };
+}
+
 fs.mkdirSync(path.join(OUT, 'bis'), { recursive: true });
 
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
