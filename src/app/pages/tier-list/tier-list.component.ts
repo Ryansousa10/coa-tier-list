@@ -43,11 +43,11 @@ export class TierListComponent implements OnInit {
     { key: 'dps', label: 'DPS', icon: '⚔️' },
     { key: 'tank', label: 'Tank', icon: '🛡️' },
     { key: 'healer', label: 'Healer', icon: '✚' },
-    { key: 'support', label: 'Suporte', icon: '✦' },
+    { key: 'support', label: 'Support', icon: '✦' },
   ];
   readonly damageProfiles: { key: DamageProfile; label: string; hint: string }[] = [
     { key: 'blended', label: 'Geral', hint: 'Todos os alvos da luta (boss + adds), como a luta acontece na prática.' },
-    { key: 'single', label: 'Single-Alvo', hint: 'Só o dano no boss, sem contar adds — mostra o real dano single-target da spec.' },
+    { key: 'single', label: 'Single-Target', hint: 'Só o dano no boss, sem contar adds — mostra o real dano single-target da spec.' },
     { key: 'aoe', label: 'AoE', hint: 'Só dano em trash/adds — mostra o real potencial de dano em área da spec. Poucos combates têm esse dado separado.' },
   ];
 
@@ -115,7 +115,7 @@ export class TierListComponent implements OnInit {
 
   varianceHint(e: TierEntry): string {
     const ratio = e.stats.p95 && e.stats.median ? (e.stats.p95 / e.stats.median).toFixed(1) : '?';
-    return `Desempenho muito variável entre lutas (topo é ${ratio}x a média) — essa spec provavelmente se destaca em fases com dano em área. Confira os filtros "Single-Alvo" e "AoE" pra ver o dano isolado.`;
+    return `Desempenho muito variável entre lutas (topo é ${ratio}x a média) — essa spec provavelmente se destaca em fases com dano em área. Confira os filtros "Single-Target" e "AoE" pra ver o dano isolado.`;
   }
 
   onIconError(ev: Event) {

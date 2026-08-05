@@ -26,11 +26,11 @@ export class SpecDetailComponent implements OnInit {
   notFound = signal(false);
 
   readonly roleLabels: Record<string, string> = {
-    dps: 'DPS', tank: 'Tank', healer: 'Healer', support: 'Suporte',
+    dps: 'DPS', tank: 'Tank', healer: 'Healer', support: 'Support',
   };
   readonly fineRoleLabels: Record<string, string> = {
-    'melee-dps': 'DPS corpo a corpo', 'ranged-dps': 'DPS à distância',
-    'caster-dps': 'DPS conjurador', 'healer': 'Curandeiro', 'tank': 'Tanque', 'support': 'Suporte',
+    'melee-dps': 'Melee DPS', 'ranged-dps': 'Ranged DPS',
+    'caster-dps': 'Caster DPS', 'healer': 'Healer', 'tank': 'Tank', 'support': 'Support',
   };
   contentStats = computed<ContentStat[]>(() => {
     const cls = this.cls();

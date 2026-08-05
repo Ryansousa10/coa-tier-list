@@ -42,12 +42,12 @@ import { Title } from '@angular/platform-browser';
         S ≥ 85%, A ≥ 68%, B ≥ 50%, C ≥ 32%, D &lt; 32%.
         Specs com menos de 5 parses são marcadas com ⚠ (amostra pequena).
       </p>
-      <h2>Geral, Single-Alvo e AoE</h2>
+      <h2>Geral, Single-Target e AoE</h2>
       <p>
         Algumas specs têm parses de dano em área (fases com vários adds) muito mais altos
         que o dano só no boss — isso faz a mediana e principalmente o "Topo" ficarem inflados
         no perfil "Geral". Quando isso acontece, marcamos a spec com 🔥. Use os filtros
-        <strong>Single-Alvo</strong> (só dano no boss) e <strong>AoE</strong> (só dano em adds/trash)
+        <strong>Single-Target</strong> (só dano no boss) e <strong>AoE</strong> (só dano em adds/trash)
         pra ver o desempenho isolado. O AoE só tem dado separado em parte dos conteúdos
         (dungeons, principalmente) — quando não tem, o site avisa.
       </p>
