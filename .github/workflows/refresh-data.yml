@@ -15,6 +15,13 @@ jobs:
   refresh-data:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Imagem oficial da Playwright já vem com o Chromium instalado.
+    # Usamos ela porque `playwright install` baixando o binário do Chrome em
+    # tempo de execução (do cdn.playwright.dev) às vezes leva 403/AccessDenied
+    # nos runners do GitHub Actions ("not available in your location") — a
+    # imagem contorna isso completamente, sem precisar baixar nada.
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,9 +34,6 @@ jobs:
 
       - name: Instalar dependências
         run: npm ci
-
-      - name: Instalar navegador (Playwright)
-        run: npx playwright install --with-deps chromium
 
       - name: Extrair dados do AscensionLogs
         run: node tools/scrape/ascension-logs.mjs
