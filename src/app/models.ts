@@ -115,6 +115,9 @@ export interface BossStatsFile {
 
 export type DamageProfile = 'blended' | 'single' | 'aoe';
 
+/** Só se aplica quando role === 'tank'. threat = dano causado (padrão), survival = dano recebido (menor é melhor). */
+export type TankMetric = 'threat' | 'survival';
+
 export interface TierFilter {
   content: ContentType;
   difficulty: string; // raid: ascended|mythic|heroic|normal — dungeons: normal|mythic
@@ -122,4 +125,5 @@ export interface TierFilter {
   role: Role;
   metric: 'median' | 'p95';
   damageProfile: DamageProfile;
+  tankMetric: TankMetric;
 }

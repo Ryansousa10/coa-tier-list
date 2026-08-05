@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { DataService } from '../../data.service';
 import { TierService } from '../../tier.service';
-import { ClassInfo, ContentType, DamageProfile, Role, StatsFile, TierEntry, TierFilter } from '../../models';
+import { ClassInfo, ContentType, DamageProfile, Role, StatsFile, TankMetric, TierEntry, TierFilter } from '../../models';
 
 @Component({
   selector: 'app-tier-list',
@@ -23,6 +23,7 @@ export class TierListComponent implements OnInit {
   role = signal<Role>('dps');
   metric = signal<'median' | 'p95'>('median');
   damageProfile = signal<DamageProfile>('blended');
+  tankMetric = signal<TankMetric>('threat');
 
   readonly contents: { key: ContentType; label: string }[] = [
     { key: 'raid', label: "Raid — Zul'Gurub" },
@@ -50,6 +51,10 @@ export class TierListComponent implements OnInit {
     { key: 'single', label: 'Single-Target', hint: 'Só o dano no boss, sem contar adds — mostra o real dano single-target da spec.' },
     { key: 'aoe', label: 'AoE', hint: 'Só dano em trash/adds — mostra o real potencial de dano em área da spec. Poucos combates têm esse dado separado.' },
   ];
+  readonly tankMetrics: { key: TankMetric; label: string; hint: string }[] = [
+    { key: 'threat', label: 'Dano Causado', hint: 'Quanto dano o tank causa (útil pra threat/ameaça). Igual ao ranking de DPS, mas só entre specs de tank.' },
+    { key: 'survival', label: 'Sobrevivência', hint: 'Quanto dano o tank recebe por segundo — aqui menor é melhor: significa que a spec mitiga mais e sobra folga pros healers.' },
+  ];
 
   filter = computed<TierFilter>(() => ({
     content: this.content(),
@@ -58,7 +63,10 @@ export class TierListComponent implements OnInit {
     role: this.role(),
     metric: this.metric(),
     damageProfile: this.damageProfile(),
+    tankMetric: this.tankMetric(),
   }));
+
+  isSurvivalMode = computed(() => this.role() === 'tank' && this.tankMetric() === 'survival');
 
   tiers = computed(() => {
     const stats = this.statsFile();
@@ -78,6 +86,19 @@ export class TierListComponent implements OnInit {
   damageProfileDescription = computed(
     () => this.damageProfiles.find(p => p.key === this.damageProfile())?.hint ?? '',
   );
+
+  tankMetricDescription = computed(
+    () => this.tankMetrics.find(t => t.key === this.tankMetric())?.hint ?? '',
+  );
+
+  lastUpdated = computed(() => {
+    const iso = this.statsFile()?.extractedAt;
+    if (!iso) return null;
+    const d = new Date(iso);
+    const datePart = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const timePart = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    return `${datePart} às ${timePart}`;
+  });
 
   constructor(
     public data: DataService,
@@ -101,7 +122,13 @@ export class TierListComponent implements OnInit {
     if (c === 'worldboss') this.phase.set(1);
   }
 
+  setRole(r: Role) {
+    this.role.set(r);
+    if (r !== 'tank') this.tankMetric.set('threat');
+  }
+
   metricLabel(): string {
+    if (this.isSurvivalMode()) return 'DTPS';
     return this.role() === 'healer' ? 'HPS' : 'DPS';
   }
 
@@ -115,6 +142,9 @@ export class TierListComponent implements OnInit {
 
   varianceHint(e: TierEntry): string {
     const ratio = e.stats.p95 && e.stats.median ? (e.stats.p95 / e.stats.median).toFixed(1) : '?';
+    if (this.isSurvivalMode()) {
+      return `Dano recebido muito variável entre lutas (topo é ${ratio}x a média) — provavelmente picos pontuais de dano, não o padrão típico.`;
+    }
     return `Desempenho muito variável entre lutas (topo é ${ratio}x a média) — essa spec provavelmente se destaca em fases com dano em área. Confira os filtros "Single-Target" e "AoE" pra ver o dano isolado.`;
   }
 

@@ -61,6 +61,27 @@ export class SpecDetailComponent implements OnInit {
     return rows;
   });
 
+  /** Só preenchido pra specs de tank — dano recebido (menor é melhor) */
+  dtpsStats = computed<ContentStat[]>(() => {
+    const cls = this.cls();
+    const spec = this.spec();
+    const sf = this.statsFile();
+    if (!cls || !spec || !sf || !spec.roles.includes('tank')) return [];
+    const name = spec.logSpecNames.base;
+    const rows: ContentStat[] = [];
+    const lookups: { combo: string; label: string }[] = [
+      { combo: 'raid-zg-ascended-dtps', label: "Zul'Gurub (Ascended)" },
+      { combo: 'raid-zg-normal-dtps', label: "Zul'Gurub (Normal)" },
+      { combo: 'dungeons-p1-mythic-dtps', label: 'Dungeons Fase 1 (Mythic)' },
+      { combo: 'worldboss-p1-dtps', label: 'World Bosses Fase 1' },
+    ];
+    for (const l of lookups) {
+      const stats = sf.stats[l.combo]?.[cls.name]?.[name];
+      if (stats) rows.push({ label: l.label, metricLabel: 'DTPS', stats });
+    }
+    return rows;
+  });
+
   constructor(
     public data: DataService,
     private route: ActivatedRoute,

@@ -17,20 +17,24 @@ const HIGH_VARIANCE_RATIO = 2.5;
 export class TierService {
   /** Chave do combo em stats.json para o filtro selecionado */
   comboKey(f: TierFilter): string {
-    const suffix = f.damageProfile === 'single' ? '-st' : f.damageProfile === 'aoe' ? '-aoe' : '';
+    const isSurvival = f.role === 'tank' && f.tankMetric === 'survival';
+    const roleKey = isSurvival ? 'dtps' : f.role;
+    // dano recebido não tem variantes de perfil de dano (não é dano causado)
+    const suffix = isSurvival ? '' : f.damageProfile === 'single' ? '-st' : f.damageProfile === 'aoe' ? '-aoe' : '';
     switch (f.content) {
       case 'raid':
-        return `raid-zg-${f.difficulty}-${f.role}${suffix}`;
+        return `raid-zg-${f.difficulty}-${roleKey}${suffix}`;
       case 'dungeons':
-        return `dungeons-p${f.phase}-${f.difficulty}-${f.role}${suffix}`;
+        return `dungeons-p${f.phase}-${f.difficulty}-${roleKey}${suffix}`;
       case 'worldboss':
-        return `worldboss-p${f.phase}-${f.role}${suffix}`;
+        return `worldboss-p${f.phase}-${roleKey}${suffix}`;
     }
   }
 
   compute(classes: ClassInfo[], statsFile: StatsFile, f: TierFilter): TierEntry[] {
     const combo = statsFile.stats[this.comboKey(f)];
     if (!combo) return [];
+    const isSurvival = f.role === 'tank' && f.tankMetric === 'survival';
 
     const entries: Omit<TierEntry, 'relative' | 'tier'>[] = [];
     for (const cls of classes) {
@@ -55,6 +59,18 @@ export class TierService {
           highVariance,
         });
       }
+    }
+
+    if (isSurvival) {
+      // dano recebido: menor é melhor — inverte a referência pro menor valor
+      const best = Math.min(...entries.map(e => e.score), Infinity);
+      return entries
+        .map(e => {
+          const relative = best / e.score;
+          const tier = TIER_THRESHOLDS.find(t => relative >= t.min)!.tier;
+          return { ...e, relative, tier };
+        })
+        .sort((a, b) => a.score - b.score);
     }
 
     const top = Math.max(...entries.map(e => e.score), 1);

@@ -56,6 +56,38 @@
     </section>
   }
 
+  @if (dtpsStats().length > 0) {
+    <section class="card section">
+      <h2>Sobrevivência (Dano Recebido)</h2>
+      <p class="hint">Quanto dano a spec recebe por segundo tanqueando — aqui <strong>menor é melhor</strong>.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Conteúdo</th>
+              <th>Média</th>
+              <th>p95</th>
+              <th>Máximo</th>
+              <th>Parses</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of dtpsStats(); track row.label) {
+              <tr>
+                <td>{{ row.label }}</td>
+                <td>{{ fmt(row.stats.median) }} {{ row.metricLabel }}</td>
+                <td>{{ row.stats.p95 != null ? fmt(row.stats.p95!) : '—' }}</td>
+                <td>{{ fmt(row.stats.max) }}</td>
+                <td>{{ row.stats.parses }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="footnote">Fonte: <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">coa.ascensionlogs.gg</a></p>
+    </section>
+  }
+
   @if (bossStats(); as bs) {
     <section class="card section">
       <h2>Desempenho por Boss — Zul'Gurub</h2>

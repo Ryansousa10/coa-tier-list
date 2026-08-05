@@ -45,6 +45,23 @@ function buildCombos() {
   return combos;
 }
 
+// Dano recebido pelos tanks (DTPS) — usado no filtro "Sobrevivência" da tier
+// list. Não passa pelas variantes de damageMode (single/AoE): é uma métrica
+// só, sem essa dimensão extra.
+function buildDtpsCombos() {
+  const combos = [];
+  for (const diff of ['ascended', 'mythic', 'heroic', 'normal']) {
+    combos.push({ key: `raid-zg-${diff}-dtps`, loc: "Zul'Gurub", diff, metric: 'avg_dtps' });
+  }
+  for (const ph of [1, 0]) {
+    for (const diff of ['normal', 'mythic']) {
+      combos.push({ key: `dungeons-p${ph}-${diff}-dtps`, loc: 'All Dungeons', diff, metric: 'avg_dtps', ph });
+    }
+    combos.push({ key: `worldboss-p${ph}-dtps`, loc: 'World Bosses', diff: 'normal', metric: 'avg_dtps', ph });
+  }
+  return combos;
+}
+
 const ZG_BOSS_IDS = [1001, 1002, 1003, 1004, 1009, 1010, 1011, 1012, 1005, 1013, 1006, 1007, 1008];
 const RAID_DIFFICULTIES = ['normal', 'heroic', 'mythic', 'ascended'];
 
@@ -117,6 +134,36 @@ async function main() {
 
   const withData = Object.values(statsOut).filter(Boolean).length;
   console.log(`  -> ${withData}/${Object.keys(statsOut).length} combos com dados`);
+
+  // ---------------------------------------- dano recebido pelos tanks (DTPS)
+  const dtpsCombos = buildDtpsCombos();
+  console.log(`[ascension-logs] dtps: ${dtpsCombos.length} combos...`);
+  const dtpsOut = await page.evaluate(async (combos) => {
+    const out = {};
+    for (const c of combos) {
+      const q = `phase=${c.ph ?? 1}&difficulty=${c.diff}&bracket=all&metric=${c.metric}&location=${encodeURIComponent(c.loc)}&role=tank`;
+      try {
+        const j = await fetch('/api/statistics?' + q).then(r => r.json());
+        if (!j.success || !j.statistics) { out[c.key] = null; continue; }
+        const classes = {};
+        for (const [cls, cd] of Object.entries(j.statistics)) {
+          const specs = {};
+          for (const [sp, sd] of Object.entries(cd.specs || {})) {
+            const pc = sd.percentiles || {};
+            specs[sp] = {
+              avg: sd.avg, median: sd.median, max: sd.max, min: sd.min, parses: sd.total_parses,
+              p99: pc.p99, p95: pc.p95, p75: pc.p75, p50: pc.p50, p25: pc.p25, p10: pc.p10,
+            };
+          }
+          classes[cls] = specs;
+        }
+        out[c.key] = classes;
+      } catch (e) { out[c.key] = null; }
+    }
+    return out;
+  }, dtpsCombos);
+  console.log(`  -> ${Object.values(dtpsOut).filter(Boolean).length}/${dtpsCombos.length} combos com dados`);
+  Object.assign(statsOut, dtpsOut);
 
   fs.writeFileSync(path.join(RAW, 'ascensionlogs-data.json'), JSON.stringify({
     extractedAt: new Date().toISOString(),

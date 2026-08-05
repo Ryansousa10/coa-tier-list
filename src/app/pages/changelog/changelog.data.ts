@@ -8,6 +8,15 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: '2026-08-05',
+    title: 'Automação dos dados, DTPS pra tanks e data de atualização',
+    items: [
+      'Os dados do site agora atualizam sozinhos a cada 2 dias (ou a qualquer momento sob demanda), sem precisar de ninguém rodando nada manualmente.',
+      'A tier list mostra agora quando os dados foram atualizados pela última vez, no topo da página.',
+      'Novo filtro "Sobrevivência" pra tanks: em vez de dano causado, mostra quanto dano cada spec recebe por segundo tanqueando (DTPS) — aqui menor é melhor. Também aparece uma tabela de sobrevivência na página de cada spec de tank.',
+    ],
+  },
+  {
+    date: '2026-08-05',
     title: 'Desempenho por boss e página de Atualizações',
     items: [
       'Nova seção na página de cada spec mostrando a média de dano/cura em cada boss individual de Zul\'Gurub, nas 4 dificuldades (Normal, Heroic, Mythic, Ascended).',
