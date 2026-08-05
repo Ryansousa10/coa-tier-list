@@ -19,7 +19,10 @@ for (const cls of classes) for (const spec of cls.specs) if (spec.icon) icons.ad
 
 for (const file of fs.readdirSync(path.join(DATA, 'bis'))) {
   const bis = JSON.parse(fs.readFileSync(path.join(DATA, 'bis', file), 'utf8'));
-  for (const slot of bis.slots) for (const item of slot.items) if (item.icon) icons.add(item.icon);
+  for (const slot of bis.slots) {
+    for (const item of slot.items) if (item.icon) icons.add(item.icon);
+    if (slot.enchant?.icon) icons.add(slot.enchant.icon);
+  }
 }
 
 const list = [...icons].filter(i => !fs.existsSync(path.join(OUT, i + '.jpg')));

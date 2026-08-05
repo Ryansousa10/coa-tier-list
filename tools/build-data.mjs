@@ -206,6 +206,41 @@ const usable = items.filter(i =>
 );
 console.log('usable items:', usable.length);
 
+// ---------------------------------------------------------------- encantamentos
+// "type" nos encantamentos de armadura é sempre "Cloth" (irrelevante) — só
+// filtramos por classe/spec nos encantamentos de arma/escudo, que têm
+// restrição real de tipo de arma.
+const enchantItems = items.filter(i => i.sourceCategory === 'enchants');
+const ENCHANT_SLOT_MAP = {
+  head: ['Head'], shoulders: ['Shoulders'], chest: ['Chest'], wrists: ['Wrists'],
+  hands: ['Hands'], waist: ['Waist'], legs: ['Legs'], feet: ['Feet'], back: ['Back'],
+  twohand: ['Two-Hand'], mainhand: ['One-Hand'], offhand: ['Shield'], ranged: ['Ranged'],
+};
+const WEAPON_TYPE_SLOTS = new Set(['One-Hand', 'Two-Hand', 'Shield', 'Ranged']);
+
+function bestEnchant(groupKey, className, specName, weights) {
+  const wantedSlots = ENCHANT_SLOT_MAP[groupKey];
+  if (!wantedSlots) return null;
+  let best = null;
+  for (const item of enchantItems) {
+    if (!wantedSlots.includes(item.slot)) continue;
+    if (WEAPON_TYPE_SLOTS.has(item.slot) && !allowedWeapon(item, className, specName)) continue;
+    const score = scoreItem(item, weights);
+    if (score <= 0) continue;
+    if (!best || score > best.score) {
+      best = {
+        id: item.id,
+        name: item.name,
+        description: item.description || '',
+        icon: iconUrl(item.icon),
+        quality: item.quality,
+        score: Math.round(score * 10) / 10,
+      };
+    }
+  }
+  return best;
+}
+
 let filesWritten = 0;
 for (const spec of meta.classSpecs) {
   const { className, specName, defaultWeights } = spec;
@@ -259,7 +294,14 @@ for (const spec of meta.classSpecs) {
       }
     }
     const top = [...best.values()].sort((a, b) => b.score - a.score).slice(0, 6);
-    if (top.length > 0) slots.push({ key: group.key, label: group.label, items: top });
+    if (top.length > 0) {
+      slots.push({
+        key: group.key,
+        label: group.label,
+        items: top,
+        enchant: bestEnchant(group.key, className, specName, defaultWeights),
+      });
+    }
   }
   if (slots.length === 0) continue;
   const file = `${classKey}-${specKey}.json`;

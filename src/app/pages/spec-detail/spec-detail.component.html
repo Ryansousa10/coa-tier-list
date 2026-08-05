@@ -33,7 +33,7 @@
           <thead>
             <tr>
               <th>Conteúdo</th>
-              <th>Mediana</th>
+              <th>Média</th>
               <th>p95</th>
               <th>Máximo</th>
               <th>Parses</th>
@@ -63,7 +63,7 @@
         Ranqueado pelos pesos de atributos do
         <a href="https://coa.bisbeard.com" target="_blank" rel="noopener">coa.bisbeard.com</a>
         para {{ b.specName }} {{ b.className }}. Itens ordenados do melhor (1º) para o pior em cada slot —
-        clique no item para abrir no banco de dados do Ascension.
+        passe o mouse pra ver o tooltip completo, clique pra abrir no banco de dados do Ascension.
       </p>
       <div class="slots">
         @for (slot of b.slots; track slot.key) {
@@ -72,8 +72,7 @@
             <ol>
               @for (item of slot.items.slice(0, 4); track item.id + item.name; let i = $index) {
                 <li>
-                  <a class="item" [class.is-best]="i === 0" [href]="data.itemUrl(item.id)" target="_blank" rel="noopener"
-                     [title]="statLine(item.stats)">
+                  <a class="item" [class.is-best]="i === 0" [href]="data.itemUrl(item.id)" target="_blank" rel="noopener">
                     <span class="item-rank">{{ i + 1 }}º</span>
                     <span class="item-icon">
                       @if (data.iconUrl(item.icon); as url) {
@@ -82,12 +81,25 @@
                     </span>
                     <span class="item-info">
                       <span class="item-name q-{{ item.quality }}">{{ item.name }}</span>
-                      <span class="item-meta">ilvl {{ item.ilvl }} · {{ sourceLabel(item) }}</span>
+                      <span class="item-meta">ilvl {{ item.ilvl }} · {{ data.sourceLabel(item) }}</span>
                     </span>
                   </a>
                 </li>
               }
             </ol>
+            @if (slot.enchant; as ench) {
+              <div class="enchant">
+                <span class="enchant-icon">
+                  @if (data.iconUrl(ench.icon); as url) {
+                    <img [src]="url" [alt]="ench.name" (error)="onIconError($event)" />
+                  }
+                </span>
+                <span class="enchant-info">
+                  <span class="enchant-label">Encantamento</span>
+                  <span class="enchant-name">{{ ench.name }} <em>({{ ench.description }})</em></span>
+                </span>
+              </div>
+            }
           </div>
         }
       </div>

@@ -167,6 +167,48 @@ table {
 
 .item-meta { font-size: 0.75rem; color: var(--text-dim); }
 
+.enchant {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  text-decoration: none;
+  border-radius: 6px;
+  padding: 6px 4px 2px;
+  margin-top: 4px;
+  border-top: 1px dashed var(--border);
+
+  &:hover { background: var(--panel-hover); text-decoration: none; }
+}
+
+.enchant-icon {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #0a0d14;
+
+  img { width: 100%; height: 100%; object-fit: cover; display: block; }
+}
+
+.enchant-info { min-width: 0; display: flex; flex-direction: column; }
+
+.enchant-label {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+
+.enchant-name {
+  font-size: 0.82rem;
+  color: var(--q-uncommon);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 @media (max-width: 640px) {
   .spec-header { padding: 14px; gap: 12px; }
   .spec-icon { flex-basis: 48px; width: 48px; height: 48px; }

@@ -1,6 +1,12 @@
 import { Injectable } from '@angular/core';
 import { BisFile, ClassInfo, StatsFile } from './models';
 
+const SOURCE_LABELS: Record<string, string> = {
+  raid: 'Raid', dungeon: 'Dungeon', worldboss: 'World Boss', worldforged: 'Worldforged',
+  worldboe: 'BoE de mundo', crafting: 'Profissão', reputation: 'Reputação', quests: 'Missão',
+  vendor: 'Vendedor', events: 'Evento', affixed: 'Item com afixo', enchants: 'Encantamento',
+};
+
 @Injectable({ providedIn: 'root' })
 export class DataService {
   private classesPromise?: Promise<ClassInfo[]>;
@@ -51,5 +57,13 @@ export class DataService {
 
   itemUrl(id: string): string {
     return `https://db.ascension.gg/?item=${id}`;
+  }
+
+  sourceLabel(item: { sourceCategory: string; source: string; version?: string }): string {
+    const cat = SOURCE_LABELS[item.sourceCategory] ?? item.sourceCategory;
+    const parts = [cat];
+    if (item.source && item.source !== 'Unknown') parts.push(item.source);
+    if (item.version && item.version !== 'Unknown' && item.version !== item.source) parts.push(item.version);
+    return parts.join(' · ');
   }
 }

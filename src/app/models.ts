@@ -67,10 +67,20 @@ export interface BisItem {
   score: number;
 }
 
+export interface EnchantInfo {
+  id: string;
+  name: string;
+  description: string;
+  icon: string | null;
+  quality: string;
+  score: number;
+}
+
 export interface BisSlot {
   key: string;
   label: string;
   items: BisItem[];
+  enchant: EnchantInfo | null;
 }
 
 export interface BisFile {

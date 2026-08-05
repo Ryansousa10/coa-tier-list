@@ -73,7 +73,7 @@ export class TierListComponent implements OnInit {
     private tierService: TierService,
     title: Title,
   ) {
-    title.setTitle('CoA Tier List — Conquest of Azeroth');
+    title.setTitle('CoA Meta - Tier List — Conquest of Azeroth');
   }
 
   async ngOnInit() {

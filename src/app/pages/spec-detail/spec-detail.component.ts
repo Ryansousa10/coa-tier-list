@@ -32,12 +32,6 @@ export class SpecDetailComponent implements OnInit {
     'melee-dps': 'DPS corpo a corpo', 'ranged-dps': 'DPS à distância',
     'caster-dps': 'DPS conjurador', 'healer': 'Curandeiro', 'tank': 'Tanque', 'support': 'Suporte',
   };
-  readonly sourceLabels: Record<string, string> = {
-    raid: 'Raid', dungeon: 'Dungeon', worldboss: 'World Boss', worldforged: 'Worldforged',
-    worldboe: 'BoE de mundo', crafting: 'Profissão', reputation: 'Reputação', quests: 'Missão',
-    vendor: 'Vendedor', events: 'Evento', affixed: 'Item com afixo',
-  };
-
   contentStats = computed<ContentStat[]>(() => {
     const cls = this.cls();
     const spec = this.spec();
@@ -92,7 +86,7 @@ export class SpecDetailComponent implements OnInit {
         this.loading.set(false);
         return;
       }
-      this.title.setTitle(`${spec.name} ${cls.name} — CoA Tier List`);
+      this.title.setTitle(`${spec.name} ${cls.name} — CoA Meta - Tier List`);
       this.bis.set(await this.data.loadBis(classKey, specKey));
       this.loading.set(false);
     });
@@ -100,28 +94,6 @@ export class SpecDetailComponent implements OnInit {
 
   fmt(n: number): string {
     return Math.round(n).toLocaleString('pt-BR');
-  }
-
-  statLine(stats: Record<string, number>): string {
-    const names: Record<string, string> = {
-      stamina: 'Vig', intellect: 'Int', strength: 'For', agility: 'Agi', spirit: 'Esp',
-      critRating: 'Crít', hitRating: 'Acerto', hasteRating: 'Pressa', spellPower: 'PdM',
-      attackPower: 'PdA', healingPower: 'Cura', armorPenetration: 'PenArm',
-      spellPenetration: 'PenMag', expertise: 'Perícia', defenseRating: 'Def',
-      dodgeRating: 'Esquiva', parryRating: 'Aparar', blockRating: 'Bloq', armor: 'Armadura',
-    };
-    return Object.entries(stats)
-      .filter(([, v]) => typeof v === 'number' && v !== 0)
-      .map(([k, v]) => `${v > 0 ? '+' : ''}${v} ${names[k] ?? k}`)
-      .join(' · ');
-  }
-
-  sourceLabel(item: { sourceCategory: string; source: string; version: string }): string {
-    const cat = this.sourceLabels[item.sourceCategory] ?? item.sourceCategory;
-    const parts = [cat];
-    if (item.source && item.source !== 'Unknown') parts.push(item.source);
-    if (item.version && item.version !== 'Unknown' && item.version !== item.source) parts.push(item.version);
-    return parts.join(' · ');
   }
 
   onIconError(ev: Event) {
