@@ -47,8 +47,15 @@ const iconOverrides = {
   inv_sid_staff_2h: 'inv_staff_30',
   inv_wand_1h_void_koboldking: 'inv_wand_22',
   inv_reliquarytableshield: 'inv_shield_32',
+  weaverform: 'spell_shadow_creepingplague',
 };
-const fixIcon = (icon) => (icon && iconOverrides[icon]) || icon;
+const fixIcon = (icon) => (icon && iconOverrides[String(icon).toLowerCase()]) || icon;
+
+// Specs com nomes diferentes entre AscensionLogs e BisBeard (mesma spec, nome distinto)
+const specNameAliases = {
+  'Venomancer:Rot': 'Rotweaver',
+};
+const bisSpecName = (className, specName) => specNameAliases[`${className}:${specName}`] || specName;
 
 const bisClassByName = {};
 for (const [key, cd] of Object.entries(meta.classData)) {
@@ -63,7 +70,8 @@ for (const [className, info] of Object.entries(logs.classSpecs)) {
   const specs = [];
   for (const specName of info.specs) {
     if (/ DPS$/.test(specName)) continue; // variantes off-role viram flag no spec base
-    const specKeyBis = bis ? Object.keys(bis.specs).find(k => bis.specs[k].name === specName) : null;
+    const bisName = bisSpecName(className, specName);
+    const specKeyBis = bis ? Object.keys(bis.specs).find(k => bis.specs[k].name === bisName) : null;
     const specKey = specKeyBis || slug(specName);
     const fineRole = (roleByClassSpec[classKey] || {})[specKey] || null;
     const roles = [];
