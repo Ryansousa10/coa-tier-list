@@ -89,6 +89,8 @@ table {
 
 .boss-table {
   td:not(.boss-name):not(.no-data) { font-variant-numeric: tabular-nums; }
+
+  .unit { font-weight: 400; text-transform: none; color: var(--text-dim); font-size: 0.68rem; }
 }
 
 .boss-name {

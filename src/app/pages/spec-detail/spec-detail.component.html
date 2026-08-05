@@ -59,14 +59,17 @@
   @if (bossStats(); as bs) {
     <section class="card section">
       <h2>Desempenho por Boss — Zul'Gurub</h2>
-      <p class="hint">Média de {{ bs.isHealer ? 'HPS' : 'DPS' }} em cada boss da raid, por dificuldade.</p>
+      <p class="hint">
+        Média de {{ bs.isHealer ? 'HPS' : 'DPS' }} em cada boss da raid, por dificuldade
+        (mesma métrica "Média" das outras tabelas desta página).
+      </p>
       <div class="table-wrap">
         <table class="boss-table">
           <thead>
             <tr>
               <th>Boss</th>
               @for (d of raidDifficulties; track d.key) {
-                <th>{{ d.label }}</th>
+                <th>{{ d.label }} <span class="unit">({{ bs.isHealer ? 'HPS' : 'DPS' }})</span></th>
               }
             </tr>
           </thead>
