@@ -68,6 +68,12 @@ export class TierListComponent implements OnInit {
 
   isSurvivalMode = computed(() => this.role() === 'tank' && this.tankMetric() === 'survival');
 
+  // Cura não tem "single-target" (não existe curar só o boss) nem AoE
+  // confiável pra raid — a API ignora damageMode quando a métrica é HPS e
+  // devolve o mesmo valor do Geral, o que só confunde. Dano recebido (DTPS)
+  // também não tem essa dimensão.
+  showDamageProfile = computed(() => this.role() !== 'healer' && !this.isSurvivalMode());
+
   tiers = computed(() => {
     const stats = this.statsFile();
     if (!stats) return [];
@@ -125,6 +131,12 @@ export class TierListComponent implements OnInit {
   setRole(r: Role) {
     this.role.set(r);
     if (r !== 'tank') this.tankMetric.set('threat');
+    if (r === 'healer') this.damageProfile.set('blended');
+  }
+
+  setTankMetric(m: TankMetric) {
+    this.tankMetric.set(m);
+    if (m === 'survival') this.damageProfile.set('blended');
   }
 
   metricLabel(): string {

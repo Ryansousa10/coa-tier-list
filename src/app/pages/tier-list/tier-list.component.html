@@ -60,7 +60,7 @@
       <span class="filter-label">Tanks</span>
       <div class="chips">
         @for (t of tankMetrics; track t.key) {
-          <button class="chip" [class.active]="tankMetric() === t.key" (click)="tankMetric.set(t.key)"
+          <button class="chip" [class.active]="tankMetric() === t.key" (click)="setTankMetric(t.key)"
                   [title]="t.hint">
             {{ t.label }}
           </button>
@@ -85,7 +85,7 @@
     <p class="metric-hint">{{ metricDescription() }}</p>
   </div>
 
-  @if (!isSurvivalMode()) {
+  @if (showDamageProfile()) {
     <div class="filter-group">
       <span class="filter-label">Perfil de Dano</span>
       <div class="chips">
