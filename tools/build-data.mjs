@@ -218,27 +218,28 @@ const ENCHANT_SLOT_MAP = {
 };
 const WEAPON_TYPE_SLOTS = new Set(['One-Hand', 'Two-Hand', 'Shield', 'Ranged']);
 
-function bestEnchant(groupKey, className, specName, weights) {
+function topEnchants(groupKey, className, specName, weights, n = 3) {
   const wantedSlots = ENCHANT_SLOT_MAP[groupKey];
-  if (!wantedSlots) return null;
-  let best = null;
+  if (!wantedSlots) return [];
+  const best = new Map(); // nome -> melhor variante (algumas têm variantes com atributos aleatórios)
   for (const item of enchantItems) {
     if (!wantedSlots.includes(item.slot)) continue;
     if (WEAPON_TYPE_SLOTS.has(item.slot) && !allowedWeapon(item, className, specName)) continue;
     const score = scoreItem(item, weights);
     if (score <= 0) continue;
-    if (!best || score > best.score) {
-      best = {
+    const prev = best.get(item.name);
+    if (!prev || score > prev.score) {
+      best.set(item.name, {
         id: item.id,
         name: item.name,
         description: item.description || '',
         icon: iconUrl(item.icon),
         quality: item.quality,
         score: Math.round(score * 10) / 10,
-      };
+      });
     }
   }
-  return best;
+  return [...best.values()].sort((a, b) => b.score - a.score).slice(0, n);
 }
 
 let filesWritten = 0;
@@ -299,7 +300,7 @@ for (const spec of meta.classSpecs) {
         key: group.key,
         label: group.label,
         items: top,
-        enchant: bestEnchant(group.key, className, specName, defaultWeights),
+        enchants: topEnchants(group.key, className, specName, defaultWeights),
       });
     }
   }

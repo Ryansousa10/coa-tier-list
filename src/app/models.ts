@@ -80,7 +80,7 @@ export interface BisSlot {
   key: string;
   label: string;
   items: BisItem[];
-  enchant: EnchantInfo | null;
+  enchants: EnchantInfo[];
 }
 
 export interface BisFile {

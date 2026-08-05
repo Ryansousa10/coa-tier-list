@@ -59,6 +59,15 @@ export class DataService {
     return `https://db.ascension.gg/?item=${id}`;
   }
 
+  /**
+   * Os encantamentos não têm um ID de item/spell válido no Ascension DB
+   * (é um ID interno do BisBeard), então em vez de um link quebrado
+   * levamos o jogador pra busca por nome no banco de dados oficial.
+   */
+  searchUrl(name: string): string {
+    return `https://db.ascension.gg/?search=${encodeURIComponent(name)}`;
+  }
+
   sourceLabel(item: { sourceCategory: string; source: string; version?: string }): string {
     const cat = SOURCE_LABELS[item.sourceCategory] ?? item.sourceCategory;
     const parts = [cat];

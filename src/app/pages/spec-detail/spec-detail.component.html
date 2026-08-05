@@ -72,7 +72,8 @@
             <ol>
               @for (item of slot.items.slice(0, 4); track item.id + item.name; let i = $index) {
                 <li>
-                  <a class="item" [class.is-best]="i === 0" [href]="data.itemUrl(item.id)" target="_blank" rel="noopener">
+                  <a class="item" [class.is-best]="i === 0" [href]="data.itemUrl(item.id)" target="_blank" rel="noopener"
+                     (mouseenter)="onItemHover(item.icon)">
                     <span class="item-rank">{{ i + 1 }}º</span>
                     <span class="item-icon">
                       @if (data.iconUrl(item.icon); as url) {
@@ -87,17 +88,28 @@
                 </li>
               }
             </ol>
-            @if (slot.enchant; as ench) {
-              <div class="enchant">
-                <span class="enchant-icon">
-                  @if (data.iconUrl(ench.icon); as url) {
-                    <img [src]="url" [alt]="ench.name" (error)="onIconError($event)" />
+            @if (slot.enchants.length > 0) {
+              <div class="enchants">
+                <span class="enchant-label">Encantamentos</span>
+                <ol>
+                  @for (ench of slot.enchants; track ench.id + ench.name; let i = $index) {
+                    <li>
+                      <button type="button" class="enchant" [class.is-best]="i === 0"
+                              (click)="onEnchantClick(ench)">
+                        <span class="item-rank">{{ i + 1 }}º</span>
+                        <span class="enchant-icon">
+                          @if (data.iconUrl(ench.icon); as url) {
+                            <img [src]="url" [alt]="ench.name" (error)="onIconError($event)" />
+                          }
+                        </span>
+                        <span class="enchant-info">
+                          <span class="enchant-name">{{ ench.name }}</span>
+                          <span class="enchant-desc">{{ ench.description }}</span>
+                        </span>
+                      </button>
+                    </li>
                   }
-                </span>
-                <span class="enchant-info">
-                  <span class="enchant-label">Encantamento</span>
-                  <span class="enchant-name">{{ ench.name }} <em>({{ ench.description }})</em></span>
-                </span>
+                </ol>
               </div>
             }
           </div>

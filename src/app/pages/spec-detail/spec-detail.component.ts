@@ -2,7 +2,8 @@ import { Component, OnInit, computed, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { DataService } from '../../data.service';
-import { BisFile, ClassInfo, SpecInfo, SpecStats, StatsFile } from '../../models';
+import { TooltipIconFixService } from '../../tooltip-icon-fix.service';
+import { BisFile, ClassInfo, EnchantInfo, SpecInfo, SpecStats, StatsFile } from '../../models';
 
 interface ContentStat {
   label: string;
@@ -56,6 +57,7 @@ export class SpecDetailComponent implements OnInit {
 
   constructor(
     public data: DataService,
+    private iconFix: TooltipIconFixService,
     private route: ActivatedRoute,
     private title: Title,
   ) {}
@@ -98,5 +100,13 @@ export class SpecDetailComponent implements OnInit {
 
   onIconError(ev: Event) {
     this.data.handleIconError(ev);
+  }
+
+  onItemHover(icon: string | null) {
+    this.iconFix.prepare(icon);
+  }
+
+  onEnchantClick(ench: EnchantInfo) {
+    window.open(this.data.searchUrl(ench.name), '_blank', 'noopener');
   }
 }
