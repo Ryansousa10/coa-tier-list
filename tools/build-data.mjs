@@ -129,6 +129,35 @@ const dpsFromDescription = (item) => {
   return m ? parseFloat(m[1]) : 0;
 };
 
+// Nomes de atributo em inglês (como aparecem na descrição) -> chave interna.
+// Usado só para encantamentos "proc" tipo "110 Agility for 15 sec." que não
+// têm stats numéricos, mas que o BisBeard (e a comunidade) tratam como se
+// dessem o atributo de forma permanente para fins de comparação (o mesmo
+// método usado no cálculo deles: coa.bisbeard.com/assets/App-*.js, tabela
+// "E4" com Ninja's Focus=110 agi, Crusader=100 str, etc. — generalizado
+// aqui pra qualquer encantamento com a mesma descrição em vez de só os
+// 4 nomes que eles cravaram).
+const PROC_STAT_NAMES = {
+  strength: 'strength', agility: 'agility', intellect: 'intellect', spirit: 'spirit',
+  stamina: 'stamina', 'attack power': 'attackPower', 'spell power': 'spellPower',
+  spellpower: 'spellPower', 'critical strike rating': 'critRating', 'crit rating': 'critRating',
+  'haste rating': 'hasteRating', 'hit rating': 'hitRating', 'armor penetration': 'armorPenetration',
+  expertise: 'expertise', 'resilience rating': 'resilienceRating', 'defense rating': 'defenseRating',
+};
+
+function parseProcStats(description) {
+  const m = /^(.+?)\s+for\s+\d+\s*sec\.?$/i.exec((description || '').trim());
+  if (!m) return null;
+  const out = {};
+  for (const part of m[1].split(/\s+and\s+/i)) {
+    const pm = /^(\d+)%?\s+([A-Za-z ]+)$/.exec(part.trim());
+    const statKey = pm && PROC_STAT_NAMES[pm[2].trim().toLowerCase()];
+    if (!statKey) return null;
+    out[statKey] = (out[statKey] || 0) + parseFloat(pm[1]);
+  }
+  return Object.keys(out).length > 0 ? out : null;
+}
+
 const iconUrl = (icon) => {
   if (!icon) return null;
   const base = String(icon).split(/[\\/]/).pop().toLowerCase();
@@ -147,6 +176,14 @@ function scoreItem(item, weights) {
       if (item.slot === 'Ranged') score += dpsFromDescription(item) * w;
     } else if (typeof stats[k] === 'number') {
       score += stats[k] * w;
+    }
+  }
+  const procStats = parseProcStats(item.description);
+  if (procStats) {
+    for (const [stat, amount] of Object.entries(procStats)) {
+      const already = stats[stat] || 0;
+      const extra = Math.max(0, amount - already);
+      score += extra * (weights[stat] || 0);
     }
   }
   return score;
@@ -214,16 +251,21 @@ const enchantItems = items.filter(i => i.sourceCategory === 'enchants');
 const ENCHANT_SLOT_MAP = {
   head: ['Head'], shoulders: ['Shoulders'], chest: ['Chest'], wrists: ['Wrists'],
   hands: ['Hands'], waist: ['Waist'], legs: ['Legs'], feet: ['Feet'], back: ['Back'],
-  twohand: ['Two-Hand'], mainhand: ['One-Hand'], offhand: ['Shield'], ranged: ['Ranged'],
+  twohand: ['Two-Hand'], mainhand: ['One-Hand'], offhand: ['Shield', 'One-Hand'], ranged: ['Ranged'],
 };
 const WEAPON_TYPE_SLOTS = new Set(['One-Hand', 'Two-Hand', 'Shield', 'Ranged']);
 
 function topEnchants(groupKey, className, specName, weights, n = 3) {
   const wantedSlots = ENCHANT_SLOT_MAP[groupKey];
   if (!wantedSlots) return [];
+  const specPerm = (meta.equipmentRules.specWeaponPermissions[className] || {})[specName] || {};
   const best = new Map(); // nome -> melhor variante (algumas têm variantes com atributos aleatórios)
   for (const item of enchantItems) {
     if (!wantedSlots.includes(item.slot)) continue;
+    // arma de uma mão na mão secundária só vale pra quem usa dual-wield
+    if (groupKey === 'offhand' && item.slot === 'One-Hand') {
+      if (!specPerm.dualWield || specPerm.dualWield === 'none' || specPerm.dualWield === 'twoHand') continue;
+    }
     if (WEAPON_TYPE_SLOTS.has(item.slot) && !allowedWeapon(item, className, specName)) continue;
     const score = scoreItem(item, weights);
     if (score <= 0) continue;
