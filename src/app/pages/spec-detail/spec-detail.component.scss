@@ -119,7 +119,7 @@ table {
 
 .item {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
   text-decoration: none;
   border-radius: 6px;
@@ -127,6 +127,20 @@ table {
   transition: background 0.15s;
 
   &:hover { background: var(--panel-hover); text-decoration: none; }
+
+  &.is-best {
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+
+    .item-rank { color: var(--accent); }
+  }
+}
+
+.item-rank {
+  flex: 0 0 20px;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-dim);
 }
 
 .item-icon {

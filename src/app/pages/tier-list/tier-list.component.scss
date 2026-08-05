@@ -25,6 +25,14 @@
 
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
 
+.metric-hint {
+  flex-basis: 100%;
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  max-width: 620px;
+}
+
 .chip {
   background: var(--bg-alt);
   color: var(--text-dim);

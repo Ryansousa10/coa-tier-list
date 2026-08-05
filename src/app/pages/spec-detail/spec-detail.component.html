@@ -62,17 +62,19 @@
       <p class="hint">
         Ranqueado pelos pesos de atributos do
         <a href="https://coa.bisbeard.com" target="_blank" rel="noopener">coa.bisbeard.com</a>
-        para {{ b.specName }} {{ b.className }}. Clique no item para abrir no banco de dados do Ascension.
+        para {{ b.specName }} {{ b.className }}. Itens ordenados do melhor (1º) para o pior em cada slot —
+        clique no item para abrir no banco de dados do Ascension.
       </p>
       <div class="slots">
         @for (slot of b.slots; track slot.key) {
           <div class="slot">
             <h3>{{ slot.label }}</h3>
             <ol>
-              @for (item of slot.items.slice(0, 4); track item.id + item.name) {
+              @for (item of slot.items.slice(0, 4); track item.id + item.name; let i = $index) {
                 <li>
-                  <a class="item" [href]="data.itemUrl(item.id)" target="_blank" rel="noopener"
+                  <a class="item" [class.is-best]="i === 0" [href]="data.itemUrl(item.id)" target="_blank" rel="noopener"
                      [title]="statLine(item.stats)">
+                    <span class="item-rank">{{ i + 1 }}º</span>
                     <span class="item-icon">
                       @if (data.iconUrl(item.icon); as url) {
                         <img [src]="url" [alt]="item.name" (error)="onIconError($event)" />

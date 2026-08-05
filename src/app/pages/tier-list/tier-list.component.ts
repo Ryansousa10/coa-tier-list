@@ -62,6 +62,12 @@ export class TierListComponent implements OnInit {
 
   totalSpecs = computed(() => this.tiers().reduce((n, g) => n + g.entries.length, 0));
 
+  metricDescription = computed(() =>
+    this.metric() === 'median'
+      ? 'Desempenho típico: metade dos parses registrados fica acima desse valor, metade abaixo. Reflete como a spec performa "na prática", com builds e execução médias.'
+      : 'Desempenho de teto: valor que 95% dos parses ficam abaixo dele (percentil 95). Mostra o potencial máximo da spec quando bem jogada e bem equipada, sem contar os parses excepcionais do topo.',
+  );
+
   constructor(
     public data: DataService,
     private tierService: TierService,
