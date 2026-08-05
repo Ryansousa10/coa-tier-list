@@ -92,6 +92,27 @@ export interface BisFile {
   slots: BisSlot[];
 }
 
+export type RaidDifficulty = 'normal' | 'heroic' | 'mythic' | 'ascended';
+
+export interface BossDifficultyResult {
+  median: number;
+  parses: number;
+}
+
+export interface BossStatsEntry {
+  id: number;
+  name: string;
+  icon: string | null;
+  results: Partial<Record<RaidDifficulty, BossDifficultyResult>>;
+}
+
+export interface BossStatsFile {
+  className: string;
+  specName: string;
+  isHealer: boolean;
+  bosses: BossStatsEntry[];
+}
+
 export type DamageProfile = 'blended' | 'single' | 'aoe';
 
 export interface TierFilter {

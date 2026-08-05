@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BisFile, ClassInfo, StatsFile } from './models';
+import { BisFile, BossStatsFile, ClassInfo, StatsFile } from './models';
 
 const SOURCE_LABELS: Record<string, string> = {
   raid: 'Raid', dungeon: 'Dungeon', worldboss: 'World Boss', worldforged: 'Worldforged',
@@ -12,6 +12,7 @@ export class DataService {
   private classesPromise?: Promise<ClassInfo[]>;
   private statsPromise?: Promise<StatsFile>;
   private bisCache = new Map<string, Promise<BisFile | null>>();
+  private bossStatsCache = new Map<string, Promise<BossStatsFile | null>>();
 
   loadClasses(): Promise<ClassInfo[]> {
     this.classesPromise ??= fetch('data/classes.json').then(r => r.json());
@@ -32,6 +33,17 @@ export class DataService {
       );
     }
     return this.bisCache.get(file)!;
+  }
+
+  loadBossStats(classKey: string, specKey: string): Promise<BossStatsFile | null> {
+    const file = `${classKey}-${specKey}`;
+    if (!this.bossStatsCache.has(file)) {
+      this.bossStatsCache.set(
+        file,
+        fetch(`data/boss-stats/${file}.json`).then(r => (r.ok ? r.json() : null)).catch(() => null),
+      );
+    }
+    return this.bossStatsCache.get(file)!;
   }
 
   /** Ícone servido localmente (baixado no build por tools/download-icons.mjs) */

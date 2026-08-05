@@ -362,3 +362,49 @@ for (const spec of meta.classSpecs) {
   filesWritten++;
 }
 console.log('bis files:', filesWritten);
+
+// ---------------------------------------------------- boss-stats/<spec>.json
+// Desempenho médio por boss individual da raid, nas 4 dificuldades —
+// mostrado na página da spec. Ver tools/data/raw/boss-stats-raw.json e
+// zg-bosses-meta.json (extraídos via bossId= na API do AscensionLogs).
+const bossStatsRawPath = path.join(RAW, 'boss-stats-raw.json');
+const bossMetaPath = path.join(RAW, 'zg-bosses-meta.json');
+if (fs.existsSync(bossStatsRawPath) && fs.existsSync(bossMetaPath)) {
+  const bossRaw = JSON.parse(fs.readFileSync(bossStatsRawPath, 'utf8'));
+  const bossMeta = JSON.parse(fs.readFileSync(bossMetaPath, 'utf8'))
+    .sort((a, b) => a.display_order - b.display_order);
+  const BOSS_DIFFICULTIES = ['normal', 'heroic', 'mythic', 'ascended'];
+
+  fs.mkdirSync(path.join(OUT, 'boss-stats'), { recursive: true });
+  let bossFilesWritten = 0;
+  for (const cls of classes) {
+    for (const spec of cls.specs) {
+      const logName = spec.logSpecNames.base;
+      const bosses = [];
+      for (const boss of bossMeta) {
+        const results = {};
+        for (const diff of BOSS_DIFFICULTIES) {
+          const combo = bossRaw.out[`${boss.boss_id}-${diff}`];
+          const stat = combo?.[cls.name]?.[logName];
+          if (stat && stat.median > 0) results[diff] = { median: stat.median, parses: stat.parses };
+        }
+        if (Object.keys(results).length > 0) {
+          bosses.push({
+            id: boss.boss_id,
+            name: boss.name,
+            icon: iconUrl(boss.icon_name),
+            results,
+          });
+        }
+      }
+      if (bosses.length > 0) {
+        fs.writeFileSync(
+          path.join(OUT, 'boss-stats', `${cls.key}-${spec.key}.json`),
+          JSON.stringify({ className: cls.name, specName: spec.name, isHealer: spec.roles.includes('healer'), bosses }),
+        );
+        bossFilesWritten++;
+      }
+    }
+  }
+  console.log('boss-stats files:', bossFilesWritten);
+}

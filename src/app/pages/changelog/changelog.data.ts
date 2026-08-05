@@ -8,6 +8,14 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: '2026-08-05',
+    title: 'Desempenho por boss e página de Atualizações',
+    items: [
+      'Nova seção na página de cada spec mostrando a média de dano/cura em cada boss individual de Zul\'Gurub, nas 4 dificuldades (Normal, Heroic, Mythic, Ascended).',
+      'Esta página de Atualizações — histórico do que muda no site, pra facilitar acompanhar as novidades.',
+    ],
+  },
+  {
+    date: '2026-08-05',
     title: 'Lançamento do site',
     items: [
       'Site no ar: tier list filtrável por conteúdo (Raid, Dungeons, World Bosses), dificuldade e função, com página de detalhe de cada spec mostrando o BIS gear por slot.',

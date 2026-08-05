@@ -56,6 +56,53 @@
     </section>
   }
 
+  @if (bossStats(); as bs) {
+    <section class="card section">
+      <h2>Desempenho por Boss — Zul'Gurub</h2>
+      <p class="hint">Média de {{ bs.isHealer ? 'HPS' : 'DPS' }} em cada boss da raid, por dificuldade.</p>
+      <div class="table-wrap">
+        <table class="boss-table">
+          <thead>
+            <tr>
+              <th>Boss</th>
+              @for (d of raidDifficulties; track d.key) {
+                <th>{{ d.label }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (boss of bs.bosses; track boss.id) {
+              <tr>
+                <td class="boss-name">
+                  <span class="boss-icon">
+                    @if (data.iconUrl(boss.icon); as url) {
+                      <img [src]="url" [alt]="boss.name" (error)="onIconError($event)" />
+                    }
+                  </span>
+                  {{ boss.name }}
+                </td>
+                @for (d of raidDifficulties; track d.key) {
+                  @if (boss.results[d.key]; as r) {
+                    <td [title]="r.parses + ' parses'" [class.low-sample]="r.parses < 5">
+                      {{ fmt(r.median) }}
+                      @if (r.parses < 5) { <span class="low-sample-mark">⚠</span> }
+                    </td>
+                  } @else {
+                    <td class="no-data">—</td>
+                  }
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="footnote">
+        Fonte: <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">coa.ascensionlogs.gg</a>
+        · ⚠ = menos de 5 parses
+      </p>
+    </section>
+  }
+
   @if (bis(); as b) {
     <section class="card section">
       <h2>BIS Gear — Fase 1</h2>

@@ -30,6 +30,11 @@ Os dados brutos ficam em `tools/data/raw/`:
 - `ascensionlogs-data2.json` — as mesmas combinações, mas com o parâmetro
   `damageMode` (`boss-only`/`trash`), usado para separar dano single-target de
   dano em área (AoE) no filtro "Perfil de Dano".
+- `boss-stats-raw.json` + `zg-bosses-meta.json` — desempenho médio por boss
+  individual de Zul'Gurub (parâmetro `bossId` da mesma API), nas 4
+  dificuldades, usado na seção "Desempenho por Boss" da página de cada spec.
+  Atenção: a API usa `role=healer` inválido — pra métrica de cura (`avg_hps`)
+  o parâmetro `role` deve ser omitido, não vale `role=healer`.
 - `bisbeard-meta.json` — classes, specs, pesos de atributos (`defaultWeights`),
   regras de equipamento e roles, extraídos do bundle do BisBeard.
 - `bisbeard-items-p1.json` — banco de itens da Fase 1 (manifest público em

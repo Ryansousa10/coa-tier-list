@@ -87,6 +87,34 @@ table {
 
 .footnote { margin: 10px 0 0; color: var(--text-dim); font-size: 0.78rem; }
 
+.boss-table {
+  td:not(.boss-name):not(.no-data) { font-variant-numeric: tabular-nums; }
+}
+
+.boss-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.boss-icon {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #0a0d14;
+
+  img { width: 100%; height: 100%; object-fit: cover; display: block; }
+}
+
+.no-data { color: var(--text-dim); }
+
+td.low-sample { color: var(--danger); }
+.low-sample-mark { cursor: help; margin-left: 2px; }
+
 .slots {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));

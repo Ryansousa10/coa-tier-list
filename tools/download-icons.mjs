@@ -21,7 +21,15 @@ for (const file of fs.readdirSync(path.join(DATA, 'bis'))) {
   const bis = JSON.parse(fs.readFileSync(path.join(DATA, 'bis', file), 'utf8'));
   for (const slot of bis.slots) {
     for (const item of slot.items) if (item.icon) icons.add(item.icon);
-    if (slot.enchant?.icon) icons.add(slot.enchant.icon);
+    for (const ench of slot.enchants || []) if (ench.icon) icons.add(ench.icon);
+  }
+}
+
+const bossStatsDir = path.join(DATA, 'boss-stats');
+if (fs.existsSync(bossStatsDir)) {
+  for (const file of fs.readdirSync(bossStatsDir)) {
+    const d = JSON.parse(fs.readFileSync(path.join(bossStatsDir, file), 'utf8'));
+    for (const boss of d.bosses) if (boss.icon) icons.add(boss.icon);
   }
 }
 
