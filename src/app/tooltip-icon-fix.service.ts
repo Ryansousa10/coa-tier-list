@@ -1,21 +1,20 @@
 import { Injectable } from '@angular/core';
-import { DataService } from './data.service';
 
 /**
- * O tooltip oficial do Ascension DB (power.js) às vezes mostra o ícone errado
- * porque o banco de dados deles tem alguns ícones incorretos (ex.: "Embrace
- * of the Lycan" vira uma calça lá). Como já sabemos o ícone certo — vem do
- * BisBeard, o mesmo que usamos no resto do site — sobrescrevemos o ícone do
- * tooltip assim que ele é criado/atualizado pelo widget.
+ * O ícone que o tooltip oficial do Ascension DB (power.js) mostra vem direto
+ * do banco de dados deles, que tem alguns ícones incorretos (ex.: "Embrace
+ * of the Lycan" vira uma calça lá). O ícone é posicionado com
+ * `position: absolute` fora da caixa do tooltip, então escondê-lo não deixa
+ * espaço vazio — assim ficamos só com o ícone correto que já aparece no
+ * resto do site, ao lado do item.
  */
 @Injectable({ providedIn: 'root' })
 export class TooltipIconFixService {
-  private pendingIcon: string | null = null;
   private observer: MutationObserver | null = null;
 
-  constructor(private data: DataService) {
+  constructor() {
     if (typeof MutationObserver === 'undefined') return;
-    this.observer = new MutationObserver(() => this.patch());
+    this.observer = new MutationObserver(() => this.hideIcon());
     this.observer.observe(document.body, {
       childList: true,
       subtree: true,
@@ -24,16 +23,10 @@ export class TooltipIconFixService {
     });
   }
 
-  /** Chamar ao passar o mouse num item, com o ícone correto que já temos */
-  prepare(icon: string | null): void {
-    this.pendingIcon = icon;
-  }
-
-  private patch(): void {
-    if (!this.pendingIcon) return;
+  private hideIcon(): void {
     const iconEl = document.querySelector<HTMLElement>('.wowhead-tooltip p[style*="background-image"]');
-    if (!iconEl) return;
-    const url = this.data.iconUrl(this.pendingIcon);
-    if (url) iconEl.style.backgroundImage = `url("${url}")`;
+    if (iconEl && iconEl.style.display !== 'none') {
+      iconEl.style.display = 'none';
+    }
   }
 }

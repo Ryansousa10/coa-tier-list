@@ -72,8 +72,7 @@
             <ol>
               @for (item of slot.items.slice(0, 4); track item.id + item.name; let i = $index) {
                 <li>
-                  <a class="item" [class.is-best]="i === 0" [href]="data.itemUrl(item.id)" target="_blank" rel="noopener"
-                     (mouseenter)="onItemHover(item.icon)">
+                  <a class="item" [class.is-best]="i === 0" [href]="data.itemUrl(item.id)" target="_blank" rel="noopener">
                     <span class="item-rank">{{ i + 1 }}º</span>
                     <span class="item-icon">
                       @if (data.iconUrl(item.icon); as url) {
