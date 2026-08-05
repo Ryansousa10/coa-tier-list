@@ -15,13 +15,6 @@ jobs:
   refresh-data:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # Imagem oficial da Playwright já vem com o Chromium instalado.
-    # Usamos ela porque `playwright install` baixando o binário do Chrome em
-    # tempo de execução (do cdn.playwright.dev) às vezes leva 403/AccessDenied
-    # nos runners do GitHub Actions ("not available in your location") — a
-    # imagem contorna isso completamente, sem precisar baixar nada.
-    container:
-      image: mcr.microsoft.com/playwright:v1.62.1-noble
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,11 +28,24 @@ jobs:
       - name: Instalar dependências
         run: npm ci
 
+      # As duas extrações rodam dentro da imagem Docker oficial da Playwright
+      # (já vem com o Chromium instalado) em vez de "playwright install" —
+      # baixar o binário do navegador em tempo de execução tomava
+      # 403/AccessDenied do CDN deles nos runners do GitHub Actions. Rodamos
+      # só ESSES dois passos via `docker run` (não o job inteiro dentro de
+      # `container:`) porque colocar o job inteiro num container bagunçava o
+      # `git` nos passos finais (checkout ficava "not in a git directory").
       - name: Extrair dados do AscensionLogs
-        run: node tools/scrape/ascension-logs.mjs
+        run: |
+          docker run --rm -v "$PWD:/work" -w /work \
+            mcr.microsoft.com/playwright:v1.62.1-noble \
+            node tools/scrape/ascension-logs.mjs
 
       - name: Extrair dados do BisBeard
-        run: node tools/scrape/bisbeard.mjs
+        run: |
+          docker run --rm -v "$PWD:/work" -w /work \
+            mcr.microsoft.com/playwright:v1.62.1-noble \
+            node tools/scrape/bisbeard.mjs
 
       - name: Checagem de sanidade (aborta se os dados vierem incompletos)
         run: node tools/scrape/sanity-check.mjs
