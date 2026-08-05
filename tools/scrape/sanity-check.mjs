@@ -40,6 +40,18 @@ check('class/spec entries (BisBeard)', (meta.classSpecs || []).length, MIN.bisbe
 const items = JSON.parse(fs.readFileSync(path.join(RAW, 'bisbeard-items-p1.json'), 'utf8'));
 check('itens (BisBeard)', items.length, MIN.items);
 
+// Foco de cura em tanks: soft-check (não bloqueia o pipeline) — é uma
+// amostra bem mais pesada e nova, não deveria travar a atualização dos
+// dados principais do site se vier fraca ou faltando.
+const tankFocusPath = path.join(RAW, 'tank-focus-raw.json');
+if (fs.existsSync(tankFocusPath)) {
+  const tankFocus = JSON.parse(fs.readFileSync(tankFocusPath, 'utf8'));
+  const n = Object.keys(tankFocus.bySpec || {}).length;
+  console.log(`INFO specs com foco de cura em tank: ${n}${n < 4 ? ' (baixo, mas não bloqueia)' : ''}`);
+} else {
+  console.log('INFO tank-focus-raw.json ausente (não bloqueia)');
+}
+
 if (!ok) {
   console.error('\nSanity check falhou — abortando antes de gerar/commitar dados.');
   process.exit(1);

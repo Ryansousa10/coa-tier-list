@@ -2,7 +2,7 @@ import { Component, OnInit, computed, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { DataService } from '../../data.service';
-import { BisFile, BossStatsFile, ClassInfo, EnchantInfo, RaidDifficulty, SpecInfo, SpecStats, StatsFile } from '../../models';
+import { BisFile, BossStatsFile, ClassInfo, EnchantInfo, RaidDifficulty, SpecInfo, SpecStats, StatsFile, TankFocusEntry, TankFocusFile } from '../../models';
 
 interface ContentStat {
   label: string;
@@ -23,6 +23,7 @@ export class SpecDetailComponent implements OnInit {
   bis = signal<BisFile | null>(null);
   bossStats = signal<BossStatsFile | null>(null);
   statsFile = signal<StatsFile | null>(null);
+  tankFocusFile = signal<TankFocusFile | null>(null);
   loading = signal(true);
   notFound = signal(false);
 
@@ -82,6 +83,25 @@ export class SpecDetailComponent implements OnInit {
     return rows;
   });
 
+  /** Só preenchido pra specs de healer com amostra suficiente */
+  tankFocus = computed<TankFocusEntry | null>(() => {
+    const cls = this.cls();
+    const spec = this.spec();
+    const tf = this.tankFocusFile();
+    if (!cls || !spec || !tf) return null;
+    return tf.specs[`${cls.key}-${spec.key}`] ?? null;
+  });
+
+  tankFocusLabel = computed(() => {
+    const entry = this.tankFocus();
+    if (!entry) return '';
+    const times = entry.focusRatio / entry.baselineRatio;
+    if (times >= 1.8) return 'Bem focado em tank';
+    if (times >= 1.2) return 'Um pouco focado em tank';
+    if (times <= 0.6) return 'Cura mais espalhada pelo raid';
+    return 'Cura equilibrada';
+  });
+
   constructor(
     public data: DataService,
     private route: ActivatedRoute,
@@ -115,12 +135,14 @@ export class SpecDetailComponent implements OnInit {
         return;
       }
       this.title.setTitle(`${spec.name} ${cls.name} — CoA Meta - Tier List`);
-      const [bis, bossStats] = await Promise.all([
+      const [bis, bossStats, tankFocusFile] = await Promise.all([
         this.data.loadBis(classKey, specKey),
         this.data.loadBossStats(classKey, specKey),
+        spec.roles.includes('healer') ? this.data.loadTankFocus() : Promise.resolve(null),
       ]);
       this.bis.set(bis);
       this.bossStats.set(bossStats);
+      this.tankFocusFile.set(tankFocusFile);
       this.loading.set(false);
     });
   }

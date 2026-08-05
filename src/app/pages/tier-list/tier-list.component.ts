@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { DataService } from '../../data.service';
 import { TierService } from '../../tier.service';
-import { ClassInfo, ContentType, DamageProfile, Role, StatsFile, TankMetric, TierEntry, TierFilter } from '../../models';
+import { ClassInfo, ContentType, DamageProfile, Role, SpecInfo, StatsFile, TankFocusFile, TankMetric, TierEntry, TierFilter } from '../../models';
 
 @Component({
   selector: 'app-tier-list',
@@ -15,6 +15,7 @@ import { ClassInfo, ContentType, DamageProfile, Role, StatsFile, TankMetric, Tie
 export class TierListComponent implements OnInit {
   classes = signal<ClassInfo[]>([]);
   statsFile = signal<StatsFile | null>(null);
+  tankFocusFile = signal<TankFocusFile | null>(null);
   loading = signal(true);
 
   content = signal<ContentType>('raid');
@@ -83,6 +84,23 @@ export class TierListComponent implements OnInit {
 
   totalSpecs = computed(() => this.tiers().reduce((n, g) => n + g.entries.length, 0));
 
+  /** Só faz sentido pra healers — quanto da cura tende a ir pros tanks vs pro raid */
+  tankFocusRanking = computed(() => {
+    if (this.role() !== 'healer') return [];
+    const tf = this.tankFocusFile();
+    if (!tf) return [];
+    const rows: { cls: ClassInfo; spec: SpecInfo; focusRatio: number; baselineRatio: number; samples: number }[] = [];
+    for (const cls of this.classes()) {
+      for (const spec of cls.specs) {
+        if (!spec.roles.includes('healer')) continue;
+        const entry = tf.specs[`${cls.key}-${spec.key}`];
+        if (!entry) continue;
+        rows.push({ cls, spec, focusRatio: entry.focusRatio, baselineRatio: entry.baselineRatio, samples: entry.samples });
+      }
+    }
+    return rows.sort((a, b) => b.focusRatio - a.focusRatio);
+  });
+
   metricDescription = computed(() =>
     this.metric() === 'median'
       ? 'Desempenho típico: metade dos parses registrados fica acima desse valor, metade abaixo. Reflete como a spec performa "na prática", com builds e execução médias.'
@@ -115,9 +133,14 @@ export class TierListComponent implements OnInit {
   }
 
   async ngOnInit() {
-    const [classes, stats] = await Promise.all([this.data.loadClasses(), this.data.loadStats()]);
+    const [classes, stats, tankFocus] = await Promise.all([
+      this.data.loadClasses(),
+      this.data.loadStats(),
+      this.data.loadTankFocus(),
+    ]);
     this.classes.set(classes);
     this.statsFile.set(stats);
+    this.tankFocusFile.set(tankFocus);
     this.loading.set(false);
   }
 
@@ -158,6 +181,10 @@ export class TierListComponent implements OnInit {
       return `Dano recebido muito variável entre lutas (topo é ${ratio}x a média) — provavelmente picos pontuais de dano, não o padrão típico.`;
     }
     return `Desempenho muito variável entre lutas (topo é ${ratio}x a média) — essa spec provavelmente se destaca em fases com dano em área. Confira os filtros "Single-Target" e "AoE" pra ver o dano isolado.`;
+  }
+
+  pct(n: number): string {
+    return (n * 100).toFixed(1) + '%';
   }
 
   onIconError(ev: Event) {

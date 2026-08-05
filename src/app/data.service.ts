@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BisFile, BossStatsFile, ClassInfo, StatsFile } from './models';
+import { BisFile, BossStatsFile, ClassInfo, StatsFile, TankFocusFile } from './models';
 
 const SOURCE_LABELS: Record<string, string> = {
   raid: 'Raid', dungeon: 'Dungeon', worldboss: 'World Boss', worldforged: 'Worldforged',
@@ -11,6 +11,7 @@ const SOURCE_LABELS: Record<string, string> = {
 export class DataService {
   private classesPromise?: Promise<ClassInfo[]>;
   private statsPromise?: Promise<StatsFile>;
+  private tankFocusPromise?: Promise<TankFocusFile | null>;
   private bisCache = new Map<string, Promise<BisFile | null>>();
   private bossStatsCache = new Map<string, Promise<BossStatsFile | null>>();
 
@@ -22,6 +23,11 @@ export class DataService {
   loadStats(): Promise<StatsFile> {
     this.statsPromise ??= fetch('data/stats.json').then(r => r.json());
     return this.statsPromise;
+  }
+
+  loadTankFocus(): Promise<TankFocusFile | null> {
+    this.tankFocusPromise ??= fetch('data/tank-focus.json').then(r => (r.ok ? r.json() : null)).catch(() => null);
+    return this.tankFocusPromise;
   }
 
   loadBis(classKey: string, specKey: string): Promise<BisFile | null> {

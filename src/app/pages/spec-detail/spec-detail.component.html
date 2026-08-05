@@ -88,6 +88,28 @@
     </section>
   }
 
+  @if (tankFocus(); as tf) {
+    <section class="card section">
+      <h2>Foco de Cura: Tank vs Raid</h2>
+      <p class="hint">
+        Estimativa (amostra dos top parses de Zul'Gurub) de quanto da cura efetiva desta spec vai pros tanks
+        em vez de se espalhar pelo raid. Não é um dado oficial — é uma heurística baseada em quem recebeu a cura,
+        não em "atribuição" declarada de healer.
+      </p>
+      <div class="tank-focus-bar-wrap">
+        <div class="tank-focus-bar">
+          <div class="tank-focus-fill" [style.width.%]="tf.focusRatio * 100"></div>
+          <div class="tank-focus-baseline" [style.left.%]="tf.baselineRatio * 100" title="Média esperada se a cura fosse espalhada igualmente entre todos"></div>
+        </div>
+        <span class="tank-focus-value">{{ (tf.focusRatio * 100).toFixed(1) }}% da cura efetiva foi pra tanks</span>
+      </div>
+      <p class="tank-focus-label">
+        <strong>{{ tankFocusLabel() }}</strong>
+        · baseline esperado ~{{ (tf.baselineRatio * 100).toFixed(1) }}% · {{ tf.samples }} parses analisados
+      </p>
+    </section>
+  }
+
   @if (bossStats(); as bs) {
     <section class="card section">
       <h2>Desempenho por Boss — Zul'Gurub</h2>

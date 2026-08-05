@@ -161,3 +161,38 @@
     · ⚠ = amostra pequena · 🔥 = desempenho puxado por picos (provável dano em área — veja os filtros de Perfil de Dano)
   </p>
 }
+
+@if (role() === 'healer' && tankFocusRanking().length > 0) {
+  <section class="tank-focus-section card">
+    <h2>Foco de Cura: Tank vs Raid</h2>
+    <p class="hint">
+      Quer ser um healer dedicado a tank? Esta lista estima, pelos top parses de Zul'Gurub, quanto da cura
+      efetiva de cada spec tende a ir pros tanks em vez de se espalhar pelo raid inteiro. Quanto maior o
+      número, mais a spec "gruda" no tank. É uma amostra (não todos os parses) e uma heurística — não um
+      dado oficial de "atribuição" de healer.
+    </p>
+    <ol class="tank-focus-list">
+      @for (row of tankFocusRanking(); track row.cls.key + row.spec.key) {
+        <li>
+          <a class="tank-focus-row" [routerLink]="['/spec', row.cls.key, row.spec.key]" [style.--class-color]="row.cls.color">
+            <span class="spec-icon">
+              @if (data.iconUrl(row.spec.icon); as url) {
+                <img [src]="url" [alt]="row.spec.name" (error)="onIconError($event)" />
+              }
+            </span>
+            <span class="spec-info">
+              <span class="spec-name">{{ row.spec.name }}</span>
+              <span class="class-name">{{ row.cls.name }}</span>
+            </span>
+            <span class="tank-focus-bar">
+              <span class="tank-focus-fill" [style.width]="pct(row.focusRatio)"></span>
+              <span class="tank-focus-baseline" [style.left]="pct(row.baselineRatio)" title="Baseline esperado se a cura fosse espalhada igualmente"></span>
+            </span>
+            <span class="tank-focus-value">{{ pct(row.focusRatio) }}</span>
+          </a>
+        </li>
+      }
+    </ol>
+    <p class="footnote">{{ tankFocusRanking().length }} specs com amostra suficiente · dados de Zul'Gurub, todas as dificuldades</p>
+  </section>
+}

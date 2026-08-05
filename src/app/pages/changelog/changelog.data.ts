@@ -8,6 +8,15 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: '2026-08-05',
+    title: 'Foco de Cura: Tank vs Raid (pra quem quer ser um healer dedicado a tank)',
+    items: [
+      'Nova seção "Foco de Cura: Tank vs Raid" no filtro Healer da tier list: mostra quais specs tendem a concentrar mais cura nos tanks em vez de espalhar pelo raid — pra quem quer saber qual spec escolher pra ser um healer dedicado a tank.',
+      'A mesma informação também aparece na página de cada spec de healer, com uma barra comparando o foco real com a média esperada se a cura fosse espalhada igualmente.',
+      'É uma estimativa por amostragem dos top parses de Zul\'Gurub (não todos os parses) — uma heurística baseada em quem recebeu a cura, não um dado oficial de "atribuição" de healer.',
+    ],
+  },
+  {
+    date: '2026-08-05',
     title: 'Automação dos dados, DTPS pra tanks e data de atualização',
     items: [
       'Os dados do site agora atualizam sozinhos a cada 2 dias (ou a qualquer momento sob demanda), sem precisar de ninguém rodando nada manualmente.',

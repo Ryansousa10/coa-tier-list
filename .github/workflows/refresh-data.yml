@@ -14,7 +14,7 @@ permissions:
 jobs:
   refresh-data:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,6 +46,16 @@ jobs:
           docker run --rm -v "$PWD:/work" -w /work \
             mcr.microsoft.com/playwright:v1.62.1-noble \
             node tools/scrape/bisbeard.mjs
+
+      # Amostra pesada (centenas de chamadas, um relatório de log por vez)
+      # pra estimar foco de cura em tank vs raid — feature nova e opcional,
+      # não deve travar a atualização dos dados principais se falhar.
+      - name: Extrair foco de cura em tanks (amostra, opcional)
+        continue-on-error: true
+        run: |
+          docker run --rm -v "$PWD:/work" -w /work \
+            mcr.microsoft.com/playwright:v1.62.1-noble \
+            node tools/scrape/healer-tank-focus.mjs
 
       - name: Checagem de sanidade (aborta se os dados vierem incompletos)
         run: node tools/scrape/sanity-check.mjs

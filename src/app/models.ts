@@ -118,6 +118,24 @@ export type DamageProfile = 'blended' | 'single' | 'aoe';
 /** Só se aplica quando role === 'tank'. threat = dano causado (padrão), survival = dano recebido (menor é melhor). */
 export type TankMetric = 'threat' | 'survival';
 
+/**
+ * Estimativa (amostral) de quanto da cura efetiva de cada spec de healer
+ * vai pros tanks vs pro resto do raid — ver tools/scrape/healer-tank-focus.mjs.
+ * baselineRatio = fração esperada se a cura fosse espalhada igualmente
+ * entre todos (tanks/total de jogadores); focusRatio bem acima disso indica
+ * um spec que tende a concentrar cura nos tanks.
+ */
+export interface TankFocusEntry {
+  samples: number;
+  focusRatio: number;
+  baselineRatio: number;
+}
+
+export interface TankFocusFile {
+  extractedAt: string;
+  specs: Record<string, TankFocusEntry>; // key = "<classKey>-<specKey>"
+}
+
 export interface TierFilter {
   content: ContentType;
   difficulty: string; // raid: ascended|mythic|heroic|normal — dungeons: normal|mythic

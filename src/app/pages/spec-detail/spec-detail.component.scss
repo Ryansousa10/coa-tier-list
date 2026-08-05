@@ -114,6 +114,36 @@ table {
 
 .no-data { color: var(--text-dim); }
 
+.tank-focus-bar-wrap { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+
+.tank-focus-bar {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  overflow: visible;
+}
+
+.tank-focus-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.tank-focus-baseline {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--text-dim);
+  cursor: help;
+}
+
+.tank-focus-value { font-size: 0.88rem; font-weight: 600; }
+
+.tank-focus-label { margin: 0; color: var(--text-dim); font-size: 0.82rem; }
+
 td.low-sample { color: var(--danger); }
 .low-sample-mark { cursor: help; margin-left: 2px; }
 

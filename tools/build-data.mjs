@@ -408,3 +408,30 @@ if (fs.existsSync(bossStatsRawPath) && fs.existsSync(bossMetaPath)) {
   }
   console.log('boss-stats files:', bossFilesWritten);
 }
+
+// -------------------------------------------------------------- tank-focus.json
+// Quanto da cura efetiva de cada spec de healer vai pros tanks vs pro resto
+// do raid — ver tools/scrape/healer-tank-focus.mjs (amostra de top parses,
+// heurística, não dado oficial).
+const tankFocusRawPath = path.join(RAW, 'tank-focus-raw.json');
+if (fs.existsSync(tankFocusRawPath)) {
+  const tankFocusRaw = JSON.parse(fs.readFileSync(tankFocusRawPath, 'utf8'));
+  const specs = {};
+  for (const cls of classes) {
+    for (const spec of cls.specs) {
+      if (!spec.roles.includes('healer')) continue;
+      const entry = tankFocusRaw.bySpec[`${cls.name}:${spec.logSpecNames.base}`];
+      if (!entry) continue;
+      specs[`${cls.key}-${spec.key}`] = {
+        samples: entry.samples,
+        focusRatio: entry.medianRatio,
+        baselineRatio: entry.avgBaselineRatio,
+      };
+    }
+  }
+  fs.writeFileSync(path.join(OUT, 'tank-focus.json'), JSON.stringify({
+    extractedAt: tankFocusRaw.extractedAt,
+    specs,
+  }));
+  console.log('tank-focus.json:', Object.keys(specs).length, 'specs');
+}

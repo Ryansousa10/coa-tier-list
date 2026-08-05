@@ -178,6 +178,79 @@
   font-size: 0.82rem;
 }
 
+.tank-focus-section {
+  margin: 20px 0 40px;
+  padding: 18px 20px;
+
+  h2 { margin: 0 0 10px; font-size: 1.15rem; color: var(--accent-soft); }
+  .hint { margin: 0 0 14px; color: var(--text-dim); font-size: 0.88rem; }
+  .footnote { margin: 12px 0 0; text-align: left; color: var(--text-dim); font-size: 0.78rem; }
+}
+
+.tank-focus-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tank-focus-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--class-color, var(--border));
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--text);
+
+  &:hover { background: var(--panel-hover); text-decoration: none; }
+
+  .spec-info { flex: 0 0 180px; }
+}
+
+.tank-focus-bar {
+  position: relative;
+  flex: 1;
+  height: 10px;
+  border-radius: 999px;
+  background: #0a0d14;
+  border: 1px solid var(--border);
+}
+
+.tank-focus-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--class-color, var(--accent)), var(--accent));
+}
+
+.tank-focus-baseline {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--text-dim);
+  cursor: help;
+}
+
+.tank-focus-value {
+  flex: 0 0 56px;
+  text-align: right;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .tank-focus-row { flex-wrap: wrap; }
+  .tank-focus-bar { flex-basis: 100%; order: 3; }
+  .spec-info { flex-basis: auto !important; }
+}
+
 @media (max-width: 640px) {
   .filter-label { min-width: 100%; }
   .tier-badge { flex-basis: 44px; font-size: 1.5rem; }
