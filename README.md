@@ -43,14 +43,40 @@ Os dados brutos ficam em `tools/data/raw/`:
 Scripts (Node ≥ 20):
 
 ```bash
-node tools/build-data.mjs      # gera public/data/{classes,stats}.json e public/data/bis/*.json
-node tools/download-icons.mjs  # baixa os ícones referenciados para public/icons/
+node tools/scrape/ascension-logs.mjs  # reextrai tools/data/raw/{ascensionlogs-data,boss-stats-raw,zg-bosses-meta}.json
+node tools/scrape/bisbeard.mjs        # reextrai tools/data/raw/{bisbeard-meta,bisbeard-items-p1}.json
+node tools/scrape/sanity-check.mjs    # confere se a extração veio completa antes de gerar/publicar
+node tools/build-data.mjs             # gera public/data/{classes,stats}.json, public/data/bis/*.json e public/data/boss-stats/*.json
+node tools/download-icons.mjs         # baixa os ícones referenciados para public/icons/
 ```
 
-> As APIs dos sites ficam atrás de Cloudflare e não permitem acesso direto do
-> navegador de terceiros (CORS/challenge). Por isso o site consome apenas dados
-> estáticos gerados no build. Para atualizar os dados é preciso reextrair os
-> arquivos brutos (via navegador logado nos sites) e rodar os scripts acima.
+### Atualização automática
+
+As APIs dos sites ficam atrás de Cloudflare e bloqueiam clientes HTTP simples
+(curl, fetch de servidor) — só funcionam executando `fetch()` de dentro do
+próprio domínio. Os scripts em `tools/scrape/` resolvem isso rodando um
+Chromium headless (Playwright) que navega até cada site e roda a extração de
+dentro do navegador.
+
+O workflow [`.github/workflows/refresh-data.yml`](.github/workflows/refresh-data.yml)
+roda esse pipeline completo automaticamente **a cada 2 dias** (ou a qualquer
+momento via aba *Actions* → *Atualizar dados do site* → *Run workflow*):
+extrai os dois sites → checa se os dados vieram completos (`sanity-check.mjs`,
+aborta sem commitar se algo vier muito incompleto) → gera `public/data/` →
+baixa ícones novos → builda o site como verificação final → commita e envia
+pro `main` só se algo realmente mudou. Cada push no `main` já dispara o
+redeploy automático na Vercel, então a atualização fica de ponta a ponta sem
+intervenção manual.
+
+> Os nomes dos arquivos JS do BisBeard mudam a cada deploy deles
+> (`realmDataCoa-<hash>.js` etc.) — `tools/scrape/bisbeard.mjs` descobre a URL
+> atual observando a rede da página em vez de fixar o nome. As funções
+> internas que ele chama (sincronizar itens, ler itens) também têm nomes
+> minificados que podem mudar; o script tenta pelo nome conhecido hoje e cai
+> pra uma busca heurística (por assinatura/formato do retorno) se não bater.
+> Se o BisBeard mudar a estrutura do app de um jeito mais profundo, o
+> workflow falha alto (não commita dado quebrado) e precisa de ajuste manual
+> no script.
 
 ## Cálculo dos tiers
 

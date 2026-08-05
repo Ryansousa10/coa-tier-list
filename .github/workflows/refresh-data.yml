@@ -1,0 +1,62 @@
+name: Atualizar dados do site
+
+# Roda a cada 2 dias (cron não tem "a cada N dias" de verdade — dia-do-mês
+# par é o jeito padrão de aproximar isso) e também pode ser disparado
+# manualmente pela aba Actions no GitHub, sem precisar esperar o agendamento.
+on:
+  schedule:
+    - cron: '0 8 */2 * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Instalar navegador (Playwright)
+        run: npx playwright install --with-deps chromium
+
+      - name: Extrair dados do AscensionLogs
+        run: node tools/scrape/ascension-logs.mjs
+
+      - name: Extrair dados do BisBeard
+        run: node tools/scrape/bisbeard.mjs
+
+      - name: Checagem de sanidade (aborta se os dados vierem incompletos)
+        run: node tools/scrape/sanity-check.mjs
+
+      - name: Gerar dados estáticos do site
+        run: node tools/build-data.mjs
+
+      - name: Baixar ícones novos
+        run: node tools/download-icons.mjs
+
+      - name: Build de verificação (garante que o site continua compilando)
+        run: npx ng build
+
+      - name: Commitar e enviar, se algo mudou
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add tools/data/raw public/data public/icons
+          if git diff --cached --quiet; then
+            echo "Nenhum dado novo — nada a commitar."
+          else
+            git commit -m "chore: atualiza dados do jogo ($(date -u +%Y-%m-%d))"
+            git push
+          fi
