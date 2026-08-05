@@ -60,7 +60,26 @@ jobs:
           git add tools/data/raw public/data public/icons
           if git diff --cached --quiet; then
             echo "Nenhum dado novo — nada a commitar."
-          else
-            git commit -m "chore: atualiza dados do jogo ($(date -u +%Y-%m-%d))"
-            git push
+            exit 0
           fi
+          git commit -m "chore: atualiza dados do jogo ($(date -u +%Y-%m-%d))"
+
+          # Se o main remoto avançou entre o checkout e agora (ex.: alguém
+          # deu push nesse meio-tempo), sincroniza e tenta de novo em vez de
+          # simplesmente falhar.
+          for i in 1 2 3 4 5; do
+            if git push; then
+              echo "Push ok."
+              exit 0
+            fi
+            echo "Push rejeitado (tentativa $i/5) — sincronizando com origin/main..."
+            git fetch origin main
+            if ! git rebase origin/main; then
+              echo "Rebase deu conflito — abortando."
+              git rebase --abort
+              exit 1
+            fi
+            sleep $((i * 5))
+          done
+          echo "Não consegui enviar depois de várias tentativas."
+          exit 1
