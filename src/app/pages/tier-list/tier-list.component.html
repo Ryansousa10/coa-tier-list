@@ -1,0 +1,119 @@
+<section class="filters card">
+  <div class="filter-group">
+    <span class="filter-label">Conteúdo</span>
+    <div class="chips">
+      @for (c of contents; track c.key) {
+        <button class="chip" [class.active]="content() === c.key" (click)="setContent(c.key)">
+          {{ c.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (content() === 'raid') {
+    <div class="filter-group">
+      <span class="filter-label">Dificuldade</span>
+      <div class="chips">
+        @for (d of raidDifficulties; track d.key) {
+          <button class="chip" [class.active]="difficulty() === d.key" (click)="difficulty.set(d.key)">
+            {{ d.label }}
+          </button>
+        }
+      </div>
+    </div>
+  }
+  @if (content() === 'dungeons') {
+    <div class="filter-group">
+      <span class="filter-label">Dificuldade</span>
+      <div class="chips">
+        @for (d of dungeonDifficulties; track d.key) {
+          <button class="chip" [class.active]="difficulty() === d.key" (click)="difficulty.set(d.key)">
+            {{ d.label }}
+          </button>
+        }
+      </div>
+    </div>
+  }
+  @if (content() !== 'raid') {
+    <div class="filter-group">
+      <span class="filter-label">Fase</span>
+      <div class="chips">
+        <button class="chip" [class.active]="phase() === 1" (click)="phase.set(1)">Fase 1</button>
+        <button class="chip" [class.active]="phase() === 0" (click)="phase.set(0)">Fase 0</button>
+      </div>
+    </div>
+  }
+
+  <div class="filter-group">
+    <span class="filter-label">Função</span>
+    <div class="chips">
+      @for (r of roles; track r.key) {
+        <button class="chip role-chip" [class.active]="role() === r.key" (click)="role.set(r.key)">
+          <span class="role-icon">{{ r.icon }}</span> {{ r.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="filter-group">
+    <span class="filter-label">Métrica</span>
+    <div class="chips">
+      <button class="chip" [class.active]="metric() === 'median'" (click)="metric.set('median')"
+              title="Desempenho típico (mediana de todos os parses)">
+        Mediana
+      </button>
+      <button class="chip" [class.active]="metric() === 'p95'" (click)="metric.set('p95')"
+              title="Teto de desempenho (percentil 95)">
+        Topo (p95)
+      </button>
+    </div>
+  </div>
+</section>
+
+@if (loading()) {
+  <div class="loading">Carregando dados…</div>
+} @else {
+  @if (totalSpecs() === 0) {
+    <div class="loading">Sem dados de logs para esta combinação de filtros.</div>
+  }
+  <section class="tier-table">
+    @for (group of tiers(); track group.tier) {
+      <div class="tier-row tier-{{ group.tier }}">
+        <div class="tier-badge">{{ group.tier }}</div>
+        <div class="tier-specs">
+          @for (e of group.entries; track e.cls.key + e.spec.key) {
+            <a class="spec-card"
+               [routerLink]="['/spec', e.cls.key, e.spec.key]"
+               [style.--class-color]="e.cls.color"
+               [title]="e.cls.name + ' — ' + e.spec.name + ' · ' + metricLabel() + ' ' + fmt(e.score) + ' · ' + e.stats.parses + ' parses'">
+              <div class="spec-icon">
+                @if (data.iconUrl(e.spec.icon); as url) {
+                  <img [src]="url" [alt]="e.spec.name" (error)="onIconError($event)" />
+                }
+              </div>
+              <div class="spec-info">
+                <span class="spec-name">
+                  {{ e.spec.name }}
+                  @if (e.logSpecName !== e.spec.name) { <em class="dps-variant">(DPS)</em> }
+                </span>
+                <span class="class-name">{{ e.cls.name }}</span>
+                <div class="score-bar"><div class="score-fill" [style.width]="barWidth(e)"></div></div>
+                <span class="score">
+                  {{ fmt(e.score) }} {{ metricLabel() }}
+                  @if (e.lowSample) { <span class="low-sample" title="Menos de 5 parses — dados pouco confiáveis">⚠</span> }
+                </span>
+              </div>
+            </a>
+          }
+        </div>
+      </div>
+    }
+  </section>
+
+  <p class="footnote">
+    Tiers relativos ao melhor desempenho do filtro atual ·
+    {{ totalSpecs() }} specs ranqueadas · Dados de
+    <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">coa.ascensionlogs.gg</a>
+    · ⚠ = amostra pequena
+  </p>
+}

@@ -1,0 +1,66 @@
+/* Tema global — CoA Tier List */
+* { box-sizing: border-box; }
+
+:root {
+  --bg: #0d1017;
+  --bg-alt: #141926;
+  --panel: #1a2032;
+  --panel-hover: #222a40;
+  --border: #2c3550;
+  --text: #e8e6e3;
+  --text-dim: #9aa3b8;
+  --accent: #ffb100;
+  --accent-soft: #ffd77a;
+  --danger: #ff5a5a;
+
+  --tier-s: #ff5a5a;
+  --tier-a: #ff9f43;
+  --tier-b: #ffd32a;
+  --tier-c: #7bed9f;
+  --tier-d: #70a1ff;
+
+  --q-poor: #9d9d9d;
+  --q-common: #ffffff;
+  --q-uncommon: #1eff00;
+  --q-rare: #0070dd;
+  --q-epic: #a335ee;
+  --q-legendary: #ff8000;
+}
+
+html { scrollbar-color: var(--border) var(--bg); }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(1200px 500px at 80% -10%, rgba(255, 177, 0, 0.06), transparent),
+    radial-gradient(900px 400px at 10% 0%, rgba(0, 112, 221, 0.07), transparent);
+}
+
+a { color: var(--accent-soft); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+button { font: inherit; cursor: pointer; }
+
+.container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.q-Poor { color: var(--q-poor); }
+.q-Common { color: var(--q-common); }
+.q-Uncommon { color: var(--q-uncommon); }
+.q-Rare { color: var(--q-rare); }
+.q-Epic { color: var(--q-epic); }
+.q-Legendary { color: var(--q-legendary); }

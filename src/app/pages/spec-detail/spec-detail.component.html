@@ -1,0 +1,99 @@
+<a class="back" routerLink="/">← Voltar para a Tier List</a>
+
+@if (loading()) {
+  <div class="loading">Carregando…</div>
+} @else if (notFound()) {
+  <div class="loading">Spec não encontrada.</div>
+} @else {
+  <header class="spec-header card" [style.--class-color]="cls()!.color">
+    <div class="spec-icon">
+      @if (data.iconUrl(spec()!.icon); as url) {
+        <img [src]="url" [alt]="spec()!.name" (error)="onIconError($event)" />
+      }
+    </div>
+    <div>
+      <h1>{{ spec()!.name }}</h1>
+      <p class="class-line">{{ cls()!.name }}</p>
+      <div class="badges">
+        @if (spec()!.fineRole) {
+          <span class="badge">{{ fineRoleLabels[spec()!.fineRole!] || spec()!.fineRole }}</span>
+        }
+        @for (r of spec()!.roles; track r) {
+          <span class="badge badge-role">{{ roleLabels[r] }}</span>
+        }
+      </div>
+    </div>
+  </header>
+
+  @if (contentStats().length > 0) {
+    <section class="card section">
+      <h2>Desempenho nos logs</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Conteúdo</th>
+              <th>Mediana</th>
+              <th>p95</th>
+              <th>Máximo</th>
+              <th>Parses</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of contentStats(); track row.label) {
+              <tr>
+                <td>{{ row.label }}</td>
+                <td>{{ fmt(row.stats.median) }} {{ row.metricLabel }}</td>
+                <td>{{ row.stats.p95 != null ? fmt(row.stats.p95!) : '—' }}</td>
+                <td>{{ fmt(row.stats.max) }}</td>
+                <td>{{ row.stats.parses }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="footnote">Fonte: <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">coa.ascensionlogs.gg</a></p>
+    </section>
+  }
+
+  @if (bis(); as b) {
+    <section class="card section">
+      <h2>BIS Gear — Fase 1</h2>
+      <p class="hint">
+        Ranqueado pelos pesos de atributos do
+        <a href="https://coa.bisbeard.com" target="_blank" rel="noopener">coa.bisbeard.com</a>
+        para {{ b.specName }} {{ b.className }}. Clique no item para abrir no banco de dados do Ascension.
+      </p>
+      <div class="slots">
+        @for (slot of b.slots; track slot.key) {
+          <div class="slot">
+            <h3>{{ slot.label }}</h3>
+            <ol>
+              @for (item of slot.items.slice(0, 4); track item.id + item.name) {
+                <li>
+                  <a class="item" [href]="data.itemUrl(item.id)" target="_blank" rel="noopener"
+                     [title]="statLine(item.stats)">
+                    <span class="item-icon">
+                      @if (data.iconUrl(item.icon); as url) {
+                        <img [src]="url" [alt]="item.name" (error)="onIconError($event)" />
+                      }
+                    </span>
+                    <span class="item-info">
+                      <span class="item-name q-{{ item.quality }}">{{ item.name }}</span>
+                      <span class="item-meta">ilvl {{ item.ilvl }} · {{ sourceLabel(item) }}</span>
+                    </span>
+                  </a>
+                </li>
+              }
+            </ol>
+          </div>
+        }
+      </div>
+    </section>
+  } @else {
+    <section class="card section">
+      <h2>BIS Gear</h2>
+      <p class="hint">Sem dados de BIS para esta spec.</p>
+    </section>
+  }
+}

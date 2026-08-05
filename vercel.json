@@ -1,0 +1,5 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/coa-tier-list/browser",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}

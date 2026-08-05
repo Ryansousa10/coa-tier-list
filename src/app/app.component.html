@@ -1,0 +1,25 @@
+<header class="site-header">
+  <div class="container header-inner">
+    <a routerLink="/" class="logo">
+      <span class="logo-mark">CoA</span>
+      <span class="logo-text">Tier List <small>Conquest of Azeroth</small></span>
+    </a>
+    <nav>
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Tier List</a>
+      <a routerLink="/sobre" routerLinkActive="active">Sobre</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <router-outlet />
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    Projeto de fã, sem afiliação com o Ascension ·
+    Dados: <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">AscensionLogs</a>,
+    <a href="https://coa.bisbeard.com" target="_blank" rel="noopener">BisBeard</a>,
+    <a href="https://db.ascension.gg" target="_blank" rel="noopener">Ascension DB</a>
+  </div>
+</footer>
