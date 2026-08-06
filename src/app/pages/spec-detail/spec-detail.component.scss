@@ -145,7 +145,7 @@ table {
 .tank-focus-label { margin: 0; color: var(--text-dim); font-size: 0.82rem; }
 
 td.low-sample { color: var(--danger); }
-.low-sample-mark { cursor: help; margin-left: 2px; }
+.low-sample-mark { color: var(--danger); vertical-align: -2px; margin-left: 2px; }
 
 .slots {
   display: grid;

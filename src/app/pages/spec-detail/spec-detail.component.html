@@ -99,7 +99,8 @@
       <div class="tank-focus-bar-wrap">
         <div class="tank-focus-bar">
           <div class="tank-focus-fill" [style.width.%]="tf.focusRatio * 100"></div>
-          <div class="tank-focus-baseline" [style.left.%]="tf.baselineRatio * 100" title="Média esperada se a cura fosse espalhada igualmente entre todos"></div>
+          <div class="tank-focus-baseline" [style.left.%]="tf.baselineRatio * 100"
+               coaTooltip="Média esperada se a cura fosse espalhada igualmente entre todos"></div>
         </div>
         <span class="tank-focus-value">{{ (tf.focusRatio * 100).toFixed(1) }}% da cura efetiva foi pra tanks</span>
       </div>
@@ -140,9 +141,11 @@
                 </td>
                 @for (d of raidDifficulties; track d.key) {
                   @if (boss.results[d.key]; as r) {
-                    <td [title]="r.parses + ' parses'" [class.low-sample]="r.parses < 5">
+                    <td [coaTooltip]="r.parses + ' parses registrados'" [class.low-sample]="r.parses < 5">
                       {{ fmt(r.median) }}
-                      @if (r.parses < 5) { <span class="low-sample-mark">⚠</span> }
+                      @if (r.parses < 5) {
+                        <lucide-icon class="low-sample-mark" [img]="Icons.lowSample" [size]="12" />
+                      }
                     </td>
                   } @else {
                     <td class="no-data">—</td>
@@ -155,7 +158,7 @@
       </div>
       <p class="footnote">
         Fonte: <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">coa.ascensionlogs.gg</a>
-        · ⚠ = menos de 5 parses
+        · <lucide-icon class="low-sample-mark" [img]="Icons.lowSample" [size]="12" /> = menos de 5 parses
       </p>
     </section>
   }

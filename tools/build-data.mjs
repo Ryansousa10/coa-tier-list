@@ -112,12 +112,18 @@ fs.writeFileSync(path.join(OUT, 'classes.json'), JSON.stringify(classes));
 console.log('classes.json:', classes.length, 'classes');
 
 // ------------------------------------------------------------------ stats.json
+// Combos "-aoe" (damageMode=trash) ficaram órfãos quando o filtro de AoE saiu
+// do site — descartados aqui pra não carregarem peso morto no payload, mesmo
+// que ainda existam em extrações antigas de tools/data/raw/.
+const siteStats = Object.fromEntries(
+  Object.entries(logs.stats).filter(([key]) => !key.endsWith('-aoe')),
+);
 fs.writeFileSync(path.join(OUT, 'stats.json'), JSON.stringify({
   extractedAt: logs.extractedAt,
   phases: logs.phases.map(p => ({ phase: p.phase, name: p.name, active: p.active })),
-  stats: logs.stats,
+  stats: siteStats,
 }));
-console.log('stats.json ok');
+console.log('stats.json:', Object.keys(siteStats).length, 'combos');
 
 // ------------------------------------------------------------- bis/<spec>.json
 const ARMOR_TYPES = new Set(['Cloth', 'Leather', 'Mail', 'Plate']);

@@ -25,6 +25,16 @@
   --q-rare: #0070dd;
   --q-epic: #a335ee;
   --q-legendary: #ff8000;
+
+  /* superfícies e profundidade */
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 20px 50px -12px rgba(0, 0, 0, 0.75);
+  --ring: 0 0 0 1px rgba(255, 177, 0, 0.35);
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 html { scrollbar-color: var(--border) var(--bg); }
@@ -56,6 +66,62 @@ button { font: inherit; cursor: pointer; }
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 10px;
+}
+
+/* Tooltip da diretiva [coaTooltip] — vive no <body>, por isso é global */
+.coa-tooltip {
+  position: fixed;
+  z-index: 100;
+  max-width: min(300px, calc(100vw - 24px));
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  background: #10141f;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  color: var(--text);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  text-align: left;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(var(--slide, 4px)) scale(0.97);
+  transition: opacity 0.16s var(--ease), transform 0.16s var(--ease);
+
+  &.is-below { --slide: -4px; }
+
+  &.is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  /* seta: quadrado rotacionado, alinhado ao centro do elemento de origem */
+  &::after {
+    content: '';
+    position: absolute;
+    left: var(--arrow-x, 50%);
+    width: 8px;
+    height: 8px;
+    margin-left: -4px;
+    background: #10141f;
+    border: 1px solid var(--border);
+    transform: rotate(45deg);
+  }
+
+  &.is-above::after {
+    bottom: -5px;
+    border-top: none;
+    border-left: none;
+  }
+
+  &.is-below::after {
+    top: -5px;
+    border-bottom: none;
+    border-right: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coa-tooltip { transition: none; }
 }
 
 .q-Poor { color: var(--q-poor); }

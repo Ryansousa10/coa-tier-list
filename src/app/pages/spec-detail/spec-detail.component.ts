@@ -1,6 +1,9 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
+import { LucideAngularModule } from 'lucide-angular';
+import { TooltipDirective } from '../../tooltip.directive';
+import { Icons } from '../../icons';
 import { DataService } from '../../data.service';
 import { BisFile, BossStatsFile, ClassInfo, EnchantInfo, RaidDifficulty, SpecInfo, SpecStats, StatsFile, TankFocusEntry, TankFocusFile } from '../../models';
 
@@ -13,11 +16,13 @@ interface ContentStat {
 @Component({
   selector: 'app-spec-detail',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, LucideAngularModule, TooltipDirective],
   templateUrl: './spec-detail.component.html',
   styleUrl: './spec-detail.component.scss',
 })
 export class SpecDetailComponent implements OnInit {
+  readonly Icons = Icons;
+
   cls = signal<ClassInfo | null>(null);
   spec = signal<SpecInfo | null>(null);
   bis = signal<BisFile | null>(null);

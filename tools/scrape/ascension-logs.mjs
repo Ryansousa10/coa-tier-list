@@ -95,10 +95,12 @@ async function main() {
 
   // ----------------------------------------------- stats (base + perfis)
   const combos = buildCombos();
+  // Não extraímos mais o perfil de AoE (damageMode=trash): a API só separa
+  // dano de trash em dungeons e, mesmo lá, a amostra é pequena demais pra
+  // sustentar um ranking — o filtro saiu do site em vez de mostrar dado ruim.
   const profiles = [
     { suffix: '', damageMode: null },
     { suffix: '-st', damageMode: 'boss-only' },
-    { suffix: '-aoe', damageMode: 'trash' },
   ];
   console.log(`[ascension-logs] stats: ${combos.length} combos x ${profiles.length} perfis = ${combos.length * profiles.length} requisições...`);
 

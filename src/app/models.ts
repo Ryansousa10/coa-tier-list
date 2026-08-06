@@ -113,10 +113,19 @@ export interface BossStatsFile {
   bosses: BossStatsEntry[];
 }
 
-export type DamageProfile = 'blended' | 'single' | 'aoe';
+/**
+ * "blended" = todos os alvos da luta; "single" = só o boss (damageMode=boss-only).
+ * Não existe perfil de AoE: a API só separa dano de trash em dungeons, e mesmo
+ * lá a amostra não sustenta um ranking — o filtro foi removido em vez de
+ * mostrar um dado que engana.
+ */
+export type DamageProfile = 'blended' | 'single';
 
 /** Só se aplica quando role === 'tank'. threat = dano causado (padrão), survival = dano recebido (menor é melhor). */
 export type TankMetric = 'threat' | 'survival';
+
+/** Filtra as specs de DPS por estilo de jogo, a partir do fineRole de cada spec. */
+export type SpecStyle = 'all' | 'melee' | 'ranged' | 'caster';
 
 /**
  * Estimativa (amostral) de quanto da cura efetiva de cada spec de healer
@@ -144,4 +153,5 @@ export interface TierFilter {
   metric: 'median' | 'p95';
   damageProfile: DamageProfile;
   tankMetric: TankMetric;
+  style: SpecStyle;
 }

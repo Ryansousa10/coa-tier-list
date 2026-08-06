@@ -28,13 +28,30 @@
   &:hover { text-decoration: none; }
 }
 
+/* A marca é "CoA Meta": o "CoA" em bloco sólido e o "Meta" logo em seguida,
+   dentro da mesma pílula, pra ler como um nome só. */
 .logo-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   background: linear-gradient(135deg, var(--accent), #ff7b00);
   color: #1a1200;
   font-weight: 800;
   border-radius: 8px;
-  padding: 4px 9px;
+  padding: 4px 8px;
   font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  box-shadow: 0 2px 10px -2px rgba(255, 177, 0, 0.45);
+}
+
+.logo-mark-meta {
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: rgba(26, 18, 0, 0.82);
+  color: var(--accent-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .logo-text {

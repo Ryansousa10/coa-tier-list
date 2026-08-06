@@ -8,6 +8,18 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: '2026-08-05',
+    title: 'Filtros reorganizados, filtro de Melee/Ranged/Caster e visual modernizado',
+    items: [
+      'Novo filtro de Estilo pras specs de DPS: dá pra ver só Melee, só Ranged (dano físico à distância) ou só Caster. Specs de tank jogando como DPS entram em Melee.',
+      'Os filtros foram reorganizados em blocos: primeiro onde você joga (conteúdo, dificuldade, fase), depois qual função, e as opções de medição (Métrica e Perfil de Dano) foram pra uma seção "Opções avançadas" recolhida — com um resumo sempre visível do que está selecionado, pra nada ficar escondido.',
+      'Botão "Limpar" pra voltar todos os filtros ao padrão de uma vez.',
+      'O filtro de AoE foi removido: a API de logs só separa dano de trash em parte das dungeons e nunca nas raids, então aquele ranking dizia mais sobre quais combates tinham o dado do que sobre as specs.',
+      'Emojis trocados por ícones de verdade em todo o site, e os textos de ajuda agora aparecem em tooltips próprias — mais legíveis, com quebra de linha e sem a demora do tooltip do navegador.',
+      'A marca no topo agora mostra "CoA Meta", que é o nome do site.',
+    ],
+  },
+  {
+    date: '2026-08-05',
     title: 'Foco de Cura: Tank vs Raid (pra quem quer ser um healer dedicado a tank)',
     items: [
       'Nova seção "Foco de Cura: Tank vs Raid" no filtro Healer da tier list: mostra quais specs tendem a concentrar mais cura nos tanks em vez de espalhar pelo raid — pra quem quer saber qual spec escolher pra ser um healer dedicado a tank.',

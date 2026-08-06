@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ClassInfo, SpecStats, StatsFile, TierEntry, TierFilter } from './models';
+import { ClassInfo, SpecInfo, SpecStats, SpecStyle, StatsFile, TierEntry, TierFilter } from './models';
 
 const TIER_THRESHOLDS: { tier: TierEntry['tier']; min: number }[] = [
   { tier: 'S', min: 0.85 },
@@ -13,6 +13,22 @@ const LOW_SAMPLE = 5;
 /** p95/mediana acima disso indica desempenho muito puxado por picos (geralmente AoE) */
 const HIGH_VARIANCE_RATIO = 2.5;
 
+/**
+ * Estilo de jogo de uma spec, a partir do fineRole vindo do BisBeard.
+ * As 12 specs que aparecem como "X DPS" nos logs são todas specs de tank
+ * jogando off-role — e todo tank luta em melee, então cai em 'melee' em vez
+ * de sumir dos filtros. Healer/Support não têm variante de DPS nos logs.
+ */
+function styleOf(spec: SpecInfo): SpecStyle | null {
+  switch (spec.fineRole) {
+    case 'melee-dps': return 'melee';
+    case 'ranged-dps': return 'ranged';
+    case 'caster-dps': return 'caster';
+    case 'tank': return 'melee';
+    default: return null;
+  }
+}
+
 @Injectable({ providedIn: 'root' })
 export class TierService {
   /** Chave do combo em stats.json para o filtro selecionado */
@@ -20,7 +36,7 @@ export class TierService {
     const isSurvival = f.role === 'tank' && f.tankMetric === 'survival';
     const roleKey = isSurvival ? 'dtps' : f.role;
     // dano recebido não tem variantes de perfil de dano (não é dano causado)
-    const suffix = isSurvival ? '' : f.damageProfile === 'single' ? '-st' : f.damageProfile === 'aoe' ? '-aoe' : '';
+    const suffix = isSurvival ? '' : f.damageProfile === 'single' ? '-st' : '';
     switch (f.content) {
       case 'raid':
         return `raid-zg-${f.difficulty}-${roleKey}${suffix}`;
@@ -42,6 +58,9 @@ export class TierService {
       if (!classStats) continue;
       for (const spec of cls.specs) {
         if (!spec.roles.includes(f.role)) continue;
+        // estilo (melee/ranged/caster) só faz sentido pra DPS — pros outros
+        // roles o fineRole é o próprio role, sem essa distinção
+        if (f.role === 'dps' && f.style !== 'all' && styleOf(spec) !== f.style) continue;
         // no modo DPS, specs de tank/healer aparecem nos logs como "X DPS"
         const logName = f.role === 'dps' ? spec.logSpecNames.dps : spec.logSpecNames.base;
         const stats: SpecStats | undefined = classStats[logName];

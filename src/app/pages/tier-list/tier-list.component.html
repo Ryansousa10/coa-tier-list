@@ -1,109 +1,167 @@
 <section class="filters card">
-  <div class="filter-group">
-    <span class="filter-label">Conteúdo</span>
-    <div class="chips">
+  <!-- 1. Onde: que conteúdo do jogo estamos olhando -->
+  <div class="filter-row">
+    <div class="segmented segmented-lg" [style.--count]="contents.length" [style.--index]="contentIndex()">
+      <span class="thumb" aria-hidden="true"></span>
       @for (c of contents; track c.key) {
-        <button class="chip" [class.active]="content() === c.key" (click)="setContent(c.key)">
+        <button type="button" class="seg" [class.active]="content() === c.key" (click)="setContent(c.key)">
           {{ c.label }}
         </button>
       }
     </div>
+
+    @if (!isDefault()) {
+      <button type="button" class="reset" (click)="resetFilters()" coaTooltip="Voltar todos os filtros pro padrão">
+        <lucide-icon [img]="Icons.reset" [size]="14" />
+        Limpar
+      </button>
+    }
   </div>
 
-  @if (content() === 'raid') {
-    <div class="filter-group">
-      <span class="filter-label">Dificuldade</span>
-      <div class="chips">
-        @for (d of raidDifficulties; track d.key) {
-          <button class="chip" [class.active]="difficulty() === d.key" (click)="difficulty.set(d.key)">
-            {{ d.label }}
-          </button>
-        }
+  <!-- 2. Recorte do conteúdo: dificuldade e/ou fase -->
+  <div class="filter-row filter-row-sub">
+    @if (difficulties().length > 0) {
+      <div class="field">
+        <span class="field-label">Dificuldade</span>
+        <div class="segmented" [style.--count]="difficulties().length" [style.--index]="difficultyIndex()">
+          <span class="thumb" aria-hidden="true"></span>
+          @for (d of difficulties(); track d.key) {
+            <button type="button" class="seg" [class.active]="difficulty() === d.key" (click)="difficulty.set(d.key)">
+              {{ d.label }}
+            </button>
+          }
+        </div>
       </div>
-    </div>
-  }
-  @if (content() === 'dungeons') {
-    <div class="filter-group">
-      <span class="filter-label">Dificuldade</span>
-      <div class="chips">
-        @for (d of dungeonDifficulties; track d.key) {
-          <button class="chip" [class.active]="difficulty() === d.key" (click)="difficulty.set(d.key)">
-            {{ d.label }}
-          </button>
-        }
-      </div>
-    </div>
-  }
-  @if (content() !== 'raid') {
-    <div class="filter-group">
-      <span class="filter-label">Fase</span>
-      <div class="chips">
-        <button class="chip" [class.active]="phase() === 1" (click)="phase.set(1)">Fase 1</button>
-        <button class="chip" [class.active]="phase() === 0" (click)="phase.set(0)">Fase 0</button>
-      </div>
-    </div>
-  }
+    }
 
-  <div class="filter-group">
-    <span class="filter-label">Função</span>
-    <div class="chips">
+    @if (content() !== 'raid') {
+      <div class="field">
+        <span class="field-label">Fase</span>
+        <div class="segmented" [style.--count]="phases.length" [style.--index]="phaseIndex()">
+          <span class="thumb" aria-hidden="true"></span>
+          @for (p of phases; track p.key) {
+            <button type="button" class="seg" [class.active]="phase() === p.key" (click)="phase.set(p.key)">
+              {{ p.label }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <hr class="divider" />
+
+  <!-- 3. Quem: função e os recortes que dependem dela -->
+  <div class="filter-row">
+    <div class="segmented segmented-lg" [style.--count]="roles.length" [style.--index]="roleIndex()">
+      <span class="thumb" aria-hidden="true"></span>
       @for (r of roles; track r.key) {
-        <button class="chip role-chip" [class.active]="role() === r.key" (click)="setRole(r.key)">
-          <span class="role-icon">{{ r.icon }}</span> {{ r.label }}
+        <button type="button" class="seg seg-icon" [class.active]="role() === r.key"
+                (click)="setRole(r.key)" [coaTooltip]="r.hint">
+          <lucide-icon [img]="r.icon" [size]="16" />
+          {{ r.label }}
         </button>
       }
     </div>
   </div>
 
-  @if (role() === 'tank') {
-    <div class="filter-group">
-      <span class="filter-label">Tanks</span>
-      <div class="chips">
-        @for (t of tankMetrics; track t.key) {
-          <button class="chip" [class.active]="tankMetric() === t.key" (click)="setTankMetric(t.key)"
-                  [title]="t.hint">
-            {{ t.label }}
-          </button>
-        }
-      </div>
-      <p class="metric-hint">{{ tankMetricDescription() }}</p>
+  @if (role() === 'dps' || role() === 'tank') {
+    <div class="filter-row filter-row-sub">
+      @if (role() === 'dps') {
+        <div class="field">
+          <span class="field-label">Estilo</span>
+          <div class="segmented" [style.--count]="styles.length" [style.--index]="styleIndex()">
+            <span class="thumb" aria-hidden="true"></span>
+            @for (s of styles; track s.key) {
+              <button type="button" class="seg" [class.seg-icon]="!!s.icon" [class.active]="style() === s.key"
+                      (click)="style.set(s.key)" [coaTooltip]="s.hint">
+                @if (s.icon) { <lucide-icon [img]="s.icon" [size]="14" /> }
+                {{ s.label }}
+              </button>
+            }
+          </div>
+          @if (styleNote(); as note) {
+            <p class="field-hint">{{ note }}</p>
+          }
+        </div>
+      }
+
+      @if (role() === 'tank') {
+        <div class="field">
+          <span class="field-label">Ranquear por</span>
+          <div class="segmented" [style.--count]="tankMetrics.length" [style.--index]="tankMetricIndex()">
+            <span class="thumb" aria-hidden="true"></span>
+            @for (t of tankMetrics; track t.key) {
+              <button type="button" class="seg" [class.active]="tankMetric() === t.key"
+                      (click)="setTankMetric(t.key)" [coaTooltip]="t.hint">
+                {{ t.label }}
+              </button>
+            }
+          </div>
+        </div>
+      }
     </div>
   }
 
-  <div class="filter-group">
-    <span class="filter-label">Métrica</span>
-    <div class="chips">
-      <button class="chip" [class.active]="metric() === 'median'" (click)="metric.set('median')"
-              title="Desempenho típico (mediana de todos os parses)">
-        Média
-      </button>
-      <button class="chip" [class.active]="metric() === 'p95'" (click)="metric.set('p95')"
-              title="Teto de desempenho (percentil 95)">
-        Topo (p95)
-      </button>
-    </div>
-    <p class="metric-hint">{{ metricDescription() }}</p>
+  @if (isSurvivalMode()) {
+    <p class="callout">
+      <lucide-icon [img]="Icons.info" [size]="15" />
+      Neste modo <strong>menor é melhor</strong>: o ranking mostra quem recebe menos dano por segundo tanqueando.
+    </p>
+  }
+
+  <hr class="divider" />
+
+  <!-- 4. Como medir: escondido por padrão, mas com resumo sempre visível -->
+  <div class="advanced">
+    <button type="button" class="advanced-toggle" [class.open]="advancedOpen()"
+            (click)="advancedOpen.set(!advancedOpen())" [attr.aria-expanded]="advancedOpen()">
+      <lucide-icon [img]="Icons.advanced" [size]="15" />
+      <span class="advanced-title">Opções avançadas</span>
+      <span class="advanced-summary">{{ advancedSummary() }}</span>
+      <lucide-icon class="chevron" [img]="Icons.chevron" [size]="16" />
+    </button>
+
+    @if (advancedOpen()) {
+      <div class="advanced-body">
+        <div class="field">
+          <span class="field-label">Métrica</span>
+          <div class="segmented" [style.--count]="metrics.length" [style.--index]="metricIndex()">
+            <span class="thumb" aria-hidden="true"></span>
+            @for (m of metrics; track m.key) {
+              <button type="button" class="seg" [class.active]="metric() === m.key"
+                      (click)="metric.set(m.key)" [coaTooltip]="m.hint">
+                {{ m.label }}
+              </button>
+            }
+          </div>
+          <p class="field-hint">{{ metricDescription() }}</p>
+        </div>
+
+        @if (showDamageProfile()) {
+          <div class="field">
+            <span class="field-label">Perfil de Dano</span>
+            <div class="segmented" [style.--count]="damageProfiles.length" [style.--index]="damageProfileIndex()">
+              <span class="thumb" aria-hidden="true"></span>
+              @for (p of damageProfiles; track p.key) {
+                <button type="button" class="seg" [class.active]="damageProfile() === p.key"
+                        (click)="damageProfile.set(p.key)" [coaTooltip]="p.hint">
+                  {{ p.label }}
+                </button>
+              }
+            </div>
+            <p class="field-hint">{{ damageProfileDescription() }}</p>
+          </div>
+        }
+      </div>
+    }
   </div>
-
-  @if (showDamageProfile()) {
-    <div class="filter-group">
-      <span class="filter-label">Perfil de Dano</span>
-      <div class="chips">
-        @for (p of damageProfiles; track p.key) {
-          <button class="chip" [class.active]="damageProfile() === p.key" (click)="damageProfile.set(p.key)"
-                  [title]="p.hint">
-            {{ p.label }}
-          </button>
-        }
-      </div>
-      <p class="metric-hint">{{ damageProfileDescription() }}</p>
-    </div>
-  }
 </section>
 
 @if (lastUpdated(); as updated) {
   <p class="last-updated">
-    🕒 Dados atualizados em {{ updated }} · atualiza automaticamente a cada 2 dias
+    <lucide-icon [img]="Icons.clock" [size]="14" />
+    Dados atualizados em {{ updated }} · atualiza automaticamente a cada 2 dias
   </p>
 }
 
@@ -113,9 +171,8 @@
   @if (totalSpecs() === 0) {
     <div class="loading">
       Sem dados de logs para esta combinação de filtros.
-      @if (!isSurvivalMode() && damageProfile() !== 'blended') {
-        <br />O perfil "{{ damageProfile() === 'aoe' ? 'AoE' : 'Single-Target' }}" só tem dados separados para
-        alguns conteúdos (dungeons, principalmente) — tente o perfil "Geral".
+      @if (role() === 'dps' && style() !== 'all') {
+        <br />Tente o estilo "Todos" — nem toda combinação de conteúdo tem specs desse estilo com parses registrados.
       }
     </div>
   }
@@ -128,7 +185,7 @@
             <a class="spec-card"
                [routerLink]="['/spec', e.cls.key, e.spec.key]"
                [style.--class-color]="e.cls.color"
-               [title]="e.cls.name + ' — ' + e.spec.name + ' · ' + metricLabel() + ' ' + fmt(e.score) + ' · ' + e.stats.parses + ' parses'">
+               [coaTooltip]="specTooltip(e)">
               <div class="spec-icon">
                 @if (data.iconUrl(e.spec.icon); as url) {
                   <img [src]="url" [alt]="e.spec.name" (error)="onIconError($event)" />
@@ -143,8 +200,14 @@
                 <div class="score-bar"><div class="score-fill" [style.width]="barWidth(e)"></div></div>
                 <span class="score">
                   {{ fmt(e.score) }} {{ metricLabel() }}
-                  @if (e.lowSample) { <span class="low-sample" title="Menos de 5 parses — dados pouco confiáveis">⚠</span> }
-                  @if (e.highVariance) { <span class="high-variance" [title]="varianceHint(e)">🔥</span> }
+                  @if (e.lowSample) {
+                    <lucide-icon class="flag flag-warn" [img]="Icons.lowSample" [size]="13"
+                                 coaTooltip="Menos de 5 parses — dados pouco confiáveis" />
+                  }
+                  @if (e.highVariance) {
+                    <lucide-icon class="flag flag-hot" [img]="Icons.highVariance" [size]="13"
+                                 [coaTooltip]="varianceHint(e)" />
+                  }
                 </span>
               </div>
             </a>
@@ -158,7 +221,14 @@
     Tiers relativos ao melhor desempenho do filtro atual ·
     {{ totalSpecs() }} specs ranqueadas · Dados de
     <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">coa.ascensionlogs.gg</a>
-    · ⚠ = amostra pequena · 🔥 = desempenho puxado por picos (provável dano em área — veja os filtros de Perfil de Dano)
+    <span class="legend">
+      <span class="legend-item">
+        <lucide-icon class="flag flag-warn" [img]="Icons.lowSample" [size]="13" /> amostra pequena
+      </span>
+      <span class="legend-item">
+        <lucide-icon class="flag flag-hot" [img]="Icons.highVariance" [size]="13" /> desempenho puxado por picos
+      </span>
+    </span>
   </p>
 }
 
@@ -186,7 +256,8 @@
             </span>
             <span class="tank-focus-bar">
               <span class="tank-focus-fill" [style.width]="pct(row.focusRatio)"></span>
-              <span class="tank-focus-baseline" [style.left]="pct(row.baselineRatio)" title="Baseline esperado se a cura fosse espalhada igualmente"></span>
+              <span class="tank-focus-baseline" [style.left]="pct(row.baselineRatio)"
+                    coaTooltip="Baseline esperado se a cura fosse espalhada igualmente entre todos"></span>
             </span>
             <span class="tank-focus-value">{{ pct(row.focusRatio) }}</span>
           </a>

@@ -1,9 +1,12 @@
 import { Component } from '@angular/core';
 import { Title } from '@angular/platform-browser';
+import { LucideAngularModule } from 'lucide-angular';
+import { Icons } from '../../icons';
 
 @Component({
   selector: 'app-about',
   standalone: true,
+  imports: [LucideAngularModule],
   template: `
     <section class="card section">
       <h1>Sobre este site</h1>
@@ -40,16 +43,29 @@ import { Title } from '@angular/platform-browser';
         <strong>média</strong> de todos os parses registrados (ou o <strong>percentil 95</strong>
         no modo "Topo"). A pontuação é normalizada pela melhor spec:
         S ≥ 85%, A ≥ 68%, B ≥ 50%, C ≥ 32%, D &lt; 32%.
-        Specs com menos de 5 parses são marcadas com ⚠ (amostra pequena).
+        Specs com menos de 5 parses são marcadas com
+        <lucide-icon class="inline-flag warn" [img]="Icons.lowSample" [size]="14" /> (amostra pequena).
       </p>
-      <h2>Geral, Single-Target e AoE</h2>
+      <h2>Geral e Single-Target</h2>
       <p>
         Algumas specs têm parses de dano em área (fases com vários adds) muito mais altos
-        que o dano só no boss — isso faz a mediana e principalmente o "Topo" ficarem inflados
-        no perfil "Geral". Quando isso acontece, marcamos a spec com 🔥. Use os filtros
-        <strong>Single-Target</strong> (só dano no boss) e <strong>AoE</strong> (só dano em adds/trash)
-        pra ver o desempenho isolado. O AoE só tem dado separado em parte dos conteúdos
-        (dungeons, principalmente) — quando não tem, o site avisa.
+        que o dano só no boss — isso faz a média e principalmente o "Topo" ficarem inflados
+        no perfil "Geral". Quando isso acontece, marcamos a spec com
+        <lucide-icon class="inline-flag hot" [img]="Icons.highVariance" [size]="14" />. Use o perfil
+        <strong>Single-Target</strong> (só o dano no boss), nas opções avançadas, pra ver o
+        desempenho isolado.
+      </p>
+      <p>
+        Já existiu um perfil de <strong>AoE</strong> aqui, mas ele saiu do site: a API de logs só
+        separa dano de trash em parte das dungeons e nunca nas raids, então o ranking que saía
+        dali dizia mais sobre quais combates tinham o dado do que sobre as specs. Preferimos
+        remover a mostrar um número que engana.
+      </p>
+      <h2>Melee, Ranged e Caster</h2>
+      <p>
+        No filtro de DPS dá pra separar as specs por estilo de jogo. Specs de tank que aparecem
+        jogando como DPS (marcadas com "(DPS)") entram em <strong>Melee</strong>, já que todo tank
+        luta em corpo a corpo.
       </p>
       <h2>Como o BIS e os encantamentos são calculados</h2>
       <p>
@@ -84,9 +100,14 @@ import { Title } from '@angular/platform-browser';
       color: var(--text);
     }
     .credit-box strong { color: var(--accent); }
+    .inline-flag { vertical-align: -3px; }
+    .inline-flag.warn { color: var(--danger); }
+    .inline-flag.hot { color: #ff9f43; }
   `,
 })
 export class AboutComponent {
+  readonly Icons = Icons;
+
   constructor(title: Title) {
     title.setTitle('Sobre — CoA Meta - Tier List');
   }
