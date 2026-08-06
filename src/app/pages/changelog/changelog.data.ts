@@ -8,6 +8,15 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: '2026-08-05',
+    title: 'Corrige as barras da tabela "Desempenho por Boss"',
+    items: [
+      'As barras de cada célula eram normalizadas por coluna (cada dificuldade tinha sua própria escala), o que fazia um número menor às vezes sair com barra maior que um número bem mais alto de outra dificuldade. Agora todas usam a mesma escala, comparável em qualquer célula da tabela.',
+      'Em linhas onde várias dificuldades chegavam perto de 100% (ex.: Hakkar), as barras vizinhas se emendavam numa faixa só. Agora cada célula tem um respiro entre as barras e um separador entre colunas.',
+      'As 4 colunas de dificuldade agora têm sempre a mesma largura entre si — antes cada uma se ajustava ao próprio conteúdo, o que também distorcia a comparação visual entre elas.',
+    ],
+  },
+  {
+    date: '2026-08-05',
     title: 'Todas as dificuldades da raid na página da spec',
     items: [
       'A seção "Desempenho nos logs" mostrava só Ascended e Normal — agora traz as 4 dificuldades de Zul\'Gurub (Ascended, Mythic, Heroic e Normal), e também as Dungeons no Normal, que faltavam.',

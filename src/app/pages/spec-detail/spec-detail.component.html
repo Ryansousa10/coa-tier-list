@@ -74,12 +74,23 @@
     <section class="card section">
       <h2>Desempenho por Boss — Zul'Gurub</h2>
       <p class="hint">
-        Média de {{ bv.unit }} em cada boss da raid. A barra de cada célula compara o boss com o
-        <strong>melhor boss desta spec naquela dificuldade</strong> — barra cheia é onde a spec mais
-        rende, barra curta é onde ela sofre.
+        Média de {{ bv.unit }} em cada boss da raid. Todas as barras usam a mesma escala — o melhor
+        resultado da spec em qualquer boss/dificuldade —, então o comprimento é comparável em
+        <strong>qualquer célula da tabela</strong>, não só dentro da mesma coluna.
       </p>
       <div class="table-wrap">
         <table class="boss-table">
+          <!-- larguras fixas e iguais nas 4 colunas de dificuldade: sem isso,
+               o navegador ajusta cada coluna ao seu próprio conteúdo (ex.:
+               "Ascended (HPS)" é mais largo que "Normal (HPS)") e a mesma
+               porcentagem de largura vira barras de tamanhos diferentes em
+               colunas diferentes, quebrando a comparação entre células. -->
+          <colgroup>
+            <col class="boss-name-col" />
+            @for (d of raidDifficulties; track d.key) {
+              <col class="boss-diff-col" />
+            }
+          </colgroup>
           <thead>
             <tr>
               <th>Boss</th>
@@ -103,7 +114,7 @@
                   @if (cell.median !== null) {
                     <td class="boss-cell" [class.low-sample]="cell.parses < 5"
                         [coaTooltip]="cell.parses + ' parses registrados'">
-                      <span class="boss-cell-bar" [style.width.%]="cell.pct * 100"
+                      <span class="boss-cell-bar" [style.width]="'calc(' + (cell.pct * 100) + '% - 6px)'"
                             [class.is-best]="cell.pct >= 0.999"></span>
                       <span class="boss-cell-value">
                         {{ fmt(cell.median) }}

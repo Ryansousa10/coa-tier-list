@@ -213,26 +213,44 @@ table {
 /* ------------------------------------------------------ tabela por boss */
 
 .boss-table {
+  /* table-layout: fixed obriga o <colgroup> a valer — sem ele o navegador
+     ignora as larguras de <col> em tabelas de layout automático. */
+  table-layout: fixed;
+
   td:not(.boss-name):not(.no-data) { font-variant-numeric: tabular-nums; }
 
   .unit { font-weight: 400; text-transform: none; color: var(--text-dim); font-size: 0.68rem; }
 }
 
+/* Com table-layout: fixed, uma coluna sem largura própria só recebe o que
+   sobra — e se não sobrar nada (tabela mais larga que o container), ela
+   colapsa perto de zero em vez de ter um mínimo. Por isso o nome do boss
+   também ganha uma largura explícita; a tabela toda rola horizontalmente
+   (.table-wrap) se não couber, o que é aceitável e já é o padrão do site. */
+.boss-name-col { width: 190px; }
+.boss-diff-col { width: 130px; }
+
 /* a barra fica atrás do número, como data bar de planilha */
 .boss-cell {
   position: relative;
-  min-width: 92px;
+  min-width: 96px;
+  /* separa visualmente uma coluna da outra — sem isso, duas barras cheias
+     em células vizinhas (ex.: linha do Hakkar) se emendam numa faixa só */
+  border-left: 1px solid var(--border);
 }
 
 .boss-cell-bar {
   position: absolute;
-  left: 0;
-  top: 4px;
-  bottom: 4px;
-  border-radius: 0 3px 3px 0;
-  background: color-mix(in srgb, var(--class-color, var(--accent)) 22%, transparent);
+  /* a largura já vem com "- 6px" embutido (ver template) — o left:3px
+     centraliza essa folga, deixando um respiro dos dois lados da barra
+     em vez de só encostar na borda esquerda da célula */
+  left: 3px;
+  top: 5px;
+  bottom: 5px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--class-color, var(--accent)) 24%, transparent);
 
-  &.is-best { background: color-mix(in srgb, var(--accent) 34%, transparent); }
+  &.is-best { background: color-mix(in srgb, var(--accent) 38%, transparent); }
 }
 
 .boss-cell-value { position: relative; }

@@ -153,20 +153,21 @@ export class SpecDetailComponent implements OnInit {
   }
 
   /**
-   * Tabela por boss com as barras já normalizadas: cada célula é comparada
-   * com o melhor valor da própria spec naquela dificuldade, então dá pra ver
-   * de relance em quais bosses ela vai bem ou mal.
+   * Tabela por boss com as barras normalizadas por um único máximo — o melhor
+   * boss/dificuldade da spec no geral —, não um máximo por coluna. Normalizar
+   * por coluna fazia a barra de Normal (ex.: 1.839) sair mais comprida que a
+   * de Mythic (1.996) só porque cada dificuldade tinha sua própria escala,
+   * o que engana. Com escala única, o comprimento da barra é comparável em
+   * qualquer célula da tabela.
    */
   bossView = computed(() => {
     const bs = this.bossStats();
     if (!bs) return null;
-    const maxPerDifficulty: Partial<Record<RaidDifficulty, number>> = {};
+    let max = 0;
     for (const boss of bs.bosses) {
       for (const d of this.raidDifficulties) {
         const r = boss.results[d.key];
-        if (r && r.median > 0) {
-          maxPerDifficulty[d.key] = Math.max(maxPerDifficulty[d.key] ?? 0, r.median);
-        }
+        if (r && r.median > 0) max = Math.max(max, r.median);
       }
     }
     const rows: BossRow[] = bs.bosses.map(boss => ({
@@ -175,7 +176,6 @@ export class SpecDetailComponent implements OnInit {
       icon: boss.icon,
       cells: this.raidDifficulties.map(d => {
         const r = boss.results[d.key];
-        const max = maxPerDifficulty[d.key] ?? 0;
         return {
           difficulty: d.key,
           median: r?.median ?? null,
