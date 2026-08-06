@@ -1,7 +1,7 @@
 <section class="filters card">
   <!-- 1. Onde: que conteúdo do jogo estamos olhando -->
   <div class="filter-row">
-    <div class="segmented segmented-lg" [style.--count]="contents.length" [style.--index]="contentIndex()">
+    <div class="segmented segmented-lg" coaSegmented [activeIndex]="contentIndex()">
       <span class="thumb" aria-hidden="true"></span>
       @for (c of contents; track c.key) {
         <button type="button" class="seg" [class.active]="content() === c.key" (click)="setContent(c.key)">
@@ -23,7 +23,7 @@
     @if (difficulties().length > 0) {
       <div class="field">
         <span class="field-label">Dificuldade</span>
-        <div class="segmented" [style.--count]="difficulties().length" [style.--index]="difficultyIndex()">
+        <div class="segmented" coaSegmented [activeIndex]="difficultyIndex()">
           <span class="thumb" aria-hidden="true"></span>
           @for (d of difficulties(); track d.key) {
             <button type="button" class="seg" [class.active]="difficulty() === d.key" (click)="difficulty.set(d.key)">
@@ -37,7 +37,7 @@
     @if (content() !== 'raid') {
       <div class="field">
         <span class="field-label">Fase</span>
-        <div class="segmented" [style.--count]="phases.length" [style.--index]="phaseIndex()">
+        <div class="segmented" coaSegmented [activeIndex]="phaseIndex()">
           <span class="thumb" aria-hidden="true"></span>
           @for (p of phases; track p.key) {
             <button type="button" class="seg" [class.active]="phase() === p.key" (click)="phase.set(p.key)">
@@ -53,7 +53,7 @@
 
   <!-- 3. Quem: função e os recortes que dependem dela -->
   <div class="filter-row">
-    <div class="segmented segmented-lg" [style.--count]="roles.length" [style.--index]="roleIndex()">
+    <div class="segmented segmented-lg" coaSegmented [activeIndex]="roleIndex()">
       <span class="thumb" aria-hidden="true"></span>
       @for (r of roles; track r.key) {
         <button type="button" class="seg seg-icon" [class.active]="role() === r.key"
@@ -70,7 +70,7 @@
       @if (role() === 'dps') {
         <div class="field">
           <span class="field-label">Estilo</span>
-          <div class="segmented" [style.--count]="styles.length" [style.--index]="styleIndex()">
+          <div class="segmented" coaSegmented [activeIndex]="styleIndex()">
             <span class="thumb" aria-hidden="true"></span>
             @for (s of styles; track s.key) {
               <button type="button" class="seg" [class.seg-icon]="!!s.icon" [class.active]="style() === s.key"
@@ -89,7 +89,7 @@
       @if (role() === 'tank') {
         <div class="field">
           <span class="field-label">Ranquear por</span>
-          <div class="segmented" [style.--count]="tankMetrics.length" [style.--index]="tankMetricIndex()">
+          <div class="segmented" coaSegmented [activeIndex]="tankMetricIndex()">
             <span class="thumb" aria-hidden="true"></span>
             @for (t of tankMetrics; track t.key) {
               <button type="button" class="seg" [class.active]="tankMetric() === t.key"
@@ -126,7 +126,7 @@
       <div class="advanced-body">
         <div class="field">
           <span class="field-label">Métrica</span>
-          <div class="segmented" [style.--count]="metrics.length" [style.--index]="metricIndex()">
+          <div class="segmented" coaSegmented [activeIndex]="metricIndex()">
             <span class="thumb" aria-hidden="true"></span>
             @for (m of metrics; track m.key) {
               <button type="button" class="seg" [class.active]="metric() === m.key"
@@ -141,7 +141,7 @@
         @if (showDamageProfile()) {
           <div class="field">
             <span class="field-label">Perfil de Dano</span>
-            <div class="segmented" [style.--count]="damageProfiles.length" [style.--index]="damageProfileIndex()">
+            <div class="segmented" coaSegmented [activeIndex]="damageProfileIndex()">
               <span class="thumb" aria-hidden="true"></span>
               @for (p of damageProfiles; track p.key) {
                 <button type="button" class="seg" [class.active]="damageProfile() === p.key"

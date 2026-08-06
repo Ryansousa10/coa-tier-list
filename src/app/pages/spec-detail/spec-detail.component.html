@@ -28,30 +28,12 @@
   @if (contentStats().length > 0) {
     <section class="card section">
       <h2>Desempenho nos logs</h2>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Conteúdo</th>
-              <th>Média</th>
-              <th>p95</th>
-              <th>Máximo</th>
-              <th>Parses</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of contentStats(); track row.label) {
-              <tr>
-                <td>{{ row.label }}</td>
-                <td>{{ fmt(row.stats.median) }} {{ row.metricLabel }}</td>
-                <td>{{ row.stats.p95 != null ? fmt(row.stats.p95!) : '—' }}</td>
-                <td>{{ fmt(row.stats.max) }}</td>
-                <td>{{ row.stats.parses }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+      <p class="hint">
+        Cada barra vai de zero até o melhor parse já registrado. O ponto cheio é o desempenho
+        <strong>típico</strong>, o traço é o <strong>teto realista</strong> (p95) e a ponta é o
+        <strong>recorde</strong>. Quanto mais distantes entre si, mais o resultado depende de gear e execução.
+      </p>
+      <ng-container [ngTemplateOutlet]="statCards" [ngTemplateOutletContext]="{ rows: contentStats() }" />
       <p class="footnote">Fonte: <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">coa.ascensionlogs.gg</a></p>
     </section>
   }
@@ -60,30 +42,7 @@
     <section class="card section">
       <h2>Sobrevivência (Dano Recebido)</h2>
       <p class="hint">Quanto dano a spec recebe por segundo tanqueando — aqui <strong>menor é melhor</strong>.</p>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Conteúdo</th>
-              <th>Média</th>
-              <th>p95</th>
-              <th>Máximo</th>
-              <th>Parses</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of dtpsStats(); track row.label) {
-              <tr>
-                <td>{{ row.label }}</td>
-                <td>{{ fmt(row.stats.median) }} {{ row.metricLabel }}</td>
-                <td>{{ row.stats.p95 != null ? fmt(row.stats.p95!) : '—' }}</td>
-                <td>{{ fmt(row.stats.max) }}</td>
-                <td>{{ row.stats.parses }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+      <ng-container [ngTemplateOutlet]="statCards" [ngTemplateOutletContext]="{ rows: dtpsStats() }" />
       <p class="footnote">Fonte: <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">coa.ascensionlogs.gg</a></p>
     </section>
   }
@@ -111,12 +70,13 @@
     </section>
   }
 
-  @if (bossStats(); as bs) {
+  @if (bossView(); as bv) {
     <section class="card section">
       <h2>Desempenho por Boss — Zul'Gurub</h2>
       <p class="hint">
-        Média de {{ bs.isHealer ? 'HPS' : 'DPS' }} em cada boss da raid, por dificuldade
-        (mesma métrica "Média" das outras tabelas desta página).
+        Média de {{ bv.unit }} em cada boss da raid. A barra de cada célula compara o boss com o
+        <strong>melhor boss desta spec naquela dificuldade</strong> — barra cheia é onde a spec mais
+        rende, barra curta é onde ela sofre.
       </p>
       <div class="table-wrap">
         <table class="boss-table">
@@ -124,12 +84,12 @@
             <tr>
               <th>Boss</th>
               @for (d of raidDifficulties; track d.key) {
-                <th>{{ d.label }} <span class="unit">({{ bs.isHealer ? 'HPS' : 'DPS' }})</span></th>
+                <th>{{ d.label }} <span class="unit">({{ bv.unit }})</span></th>
               }
             </tr>
           </thead>
           <tbody>
-            @for (boss of bs.bosses; track boss.id) {
+            @for (boss of bv.rows; track boss.id) {
               <tr>
                 <td class="boss-name">
                   <span class="boss-icon">
@@ -139,13 +99,18 @@
                   </span>
                   {{ boss.name }}
                 </td>
-                @for (d of raidDifficulties; track d.key) {
-                  @if (boss.results[d.key]; as r) {
-                    <td [coaTooltip]="r.parses + ' parses registrados'" [class.low-sample]="r.parses < 5">
-                      {{ fmt(r.median) }}
-                      @if (r.parses < 5) {
-                        <lucide-icon class="low-sample-mark" [img]="Icons.lowSample" [size]="12" />
-                      }
+                @for (cell of boss.cells; track cell.difficulty) {
+                  @if (cell.median !== null) {
+                    <td class="boss-cell" [class.low-sample]="cell.parses < 5"
+                        [coaTooltip]="cell.parses + ' parses registrados'">
+                      <span class="boss-cell-bar" [style.width.%]="cell.pct * 100"
+                            [class.is-best]="cell.pct >= 0.999"></span>
+                      <span class="boss-cell-value">
+                        {{ fmt(cell.median) }}
+                        @if (cell.parses < 5) {
+                          <lucide-icon class="low-sample-mark" [img]="Icons.lowSample" [size]="12" />
+                        }
+                      </span>
                     </td>
                   } @else {
                     <td class="no-data">—</td>
@@ -229,3 +194,38 @@
     </section>
   }
 }
+
+<!-- Cards de estatística, usados tanto pelo desempenho quanto pela sobrevivência -->
+<ng-template #statCards let-rows="rows">
+  <div class="stat-cards">
+    @for (row of rows; track row.label) {
+      <div class="stat-card">
+        <div class="stat-head">
+          <span class="stat-title">{{ row.label }}</span>
+          <span class="stat-conf conf-{{ row.confidence.level }}"
+                [coaTooltip]="row.stats.parses + ' parses registrados — ' + row.confidence.label">
+            {{ row.stats.parses }} parses
+          </span>
+        </div>
+
+        <div class="stat-value">
+          {{ fmt(row.stats.median) }}
+          <span class="stat-unit">{{ row.metricLabel }}</span>
+          <span class="stat-tag">típico</span>
+        </div>
+
+        <div class="stat-track">
+          <span class="stat-fill" [style.width.%]="row.medianPct"></span>
+          <span class="stat-p95" [style.left.%]="row.p95Pct"
+                [coaTooltip]="'Teto realista (p95): ' + fmt(row.stats.p95 ?? row.stats.median) + ' ' + row.metricLabel"></span>
+        </div>
+
+        <div class="stat-legend">
+          <span><i class="dot dot-median"></i>Típico {{ fmt(row.stats.median) }}</span>
+          <span><i class="dot dot-p95"></i>p95 {{ row.stats.p95 != null ? fmt(row.stats.p95) : '—' }}</span>
+          <span><i class="dot dot-max"></i>Recorde {{ fmt(row.stats.max) }}</span>
+        </div>
+      </div>
+    }
+  </div>
+</ng-template>

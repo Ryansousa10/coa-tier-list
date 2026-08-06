@@ -59,6 +59,7 @@
   --pad: 4px;
   position: relative;
   display: flex;
+  flex-wrap: wrap;
   padding: var(--pad);
   gap: 2px;
   background: var(--bg-alt);
@@ -66,45 +67,41 @@
   border-radius: var(--radius);
   max-width: 100%;
 
-  /* O indicador desliza via `left` em vez de translateX: a posição sai do
-     mesmo cálculo da largura, então acompanha qualquer contagem de itens sem
-     depender de porcentagem de transform (que resolve contra a largura do
-     próprio thumb e é mais fácil de quebrar). */
+  /* Posição e tamanho vêm medidos da diretiva coaSegmented (o botão ativo),
+     então cada item pode ter a largura natural do texto sem cortar nada. */
   .thumb {
     position: absolute;
-    top: var(--pad);
-    bottom: var(--pad);
-    left: calc(var(--pad) + var(--index) * (100% - var(--pad) * 2) / var(--count));
-    width: calc((100% - var(--pad) * 2) / var(--count));
+    top: var(--thumb-y, var(--pad));
+    left: var(--thumb-x, var(--pad));
+    width: var(--thumb-w, 0);
+    height: var(--thumb-h, 0);
     border-radius: calc(var(--radius) - var(--pad));
     background: linear-gradient(180deg, var(--accent), #f0a000);
     box-shadow: var(--shadow-sm);
-    transition: left 0.32s var(--ease);
+    transition: left 0.32s var(--ease), top 0.32s var(--ease),
+                width 0.32s var(--ease), height 0.32s var(--ease);
   }
 }
 
 .seg {
   position: relative;
   z-index: 1;
-  flex: 1 1 0;
-  min-width: 0;
-  padding: 7px 12px;
+  flex: 0 0 auto;
+  padding: 7px 14px;
   border: none;
   background: transparent;
   border-radius: calc(var(--radius) - var(--pad));
   color: var(--text-dim);
   font-size: 0.86rem;
+  /* peso igual nos dois estados de propósito: se o ativo engordasse, a largura
+     do botão mudaria no clique e o indicador (que é medido) ficaria defasado */
+  font-weight: 600;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   transition: color 0.2s var(--ease);
 
   &:hover:not(.active) { color: var(--text); }
 
-  &.active {
-    color: #1a1200;
-    font-weight: 650;
-  }
+  &.active { color: #1a1200; }
 
   &:focus-visible {
     outline: none;
@@ -445,8 +442,8 @@
 
 @media (max-width: 640px) {
   .filters { padding: 12px; }
-  .segmented-lg .seg { padding: 8px 8px; font-size: 0.82rem; }
-  .seg { padding: 7px 8px; font-size: 0.8rem; }
+  .segmented-lg .seg { padding: 8px 10px; font-size: 0.82rem; }
+  .seg { padding: 7px 10px; font-size: 0.8rem; }
   .tier-badge { flex-basis: 44px; font-size: 1.5rem; }
   .tier-specs { grid-template-columns: 1fr 1fr; }
   .spec-card { padding: 6px 8px; }
@@ -459,12 +456,4 @@
 
 @media (max-width: 460px) {
   .tier-specs { grid-template-columns: 1fr; }
-  /* com 4 opções o segmented não cabe numa linha só — vira grade 2x2 */
-  .segmented-lg { flex-wrap: wrap; }
-  .segmented-lg .seg { flex: 1 1 40%; }
-  .segmented-lg .thumb { display: none; }
-  .segmented-lg .seg.active {
-    background: linear-gradient(180deg, var(--accent), #f0a000);
-    color: #1a1200;
-  }
 }

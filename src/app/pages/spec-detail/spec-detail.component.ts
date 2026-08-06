@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
+import { NgTemplateOutlet } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
 import { TooltipDirective } from '../../tooltip.directive';
 import { Icons } from '../../icons';
@@ -11,14 +12,42 @@ interface ContentStat {
   label: string;
   metricLabel: string;
   stats: SpecStats;
+  /** posição da média e do p95 numa escala de 0 até o máximo, pra desenhar a barra */
+  medianPct: number;
+  p95Pct: number;
+  confidence: { label: string; level: 'alta' | 'media' | 'baixa' };
+}
+
+interface BossCell {
+  difficulty: RaidDifficulty;
+  median: number | null;
+  parses: number;
+  /** 0..1 em relação ao melhor valor da spec naquela dificuldade */
+  pct: number;
+}
+
+interface BossRow {
+  id: number;
+  name: string;
+  icon: string | null;
+  cells: BossCell[];
+}
+
+/** Quanto dá pra confiar no número, a partir do tamanho da amostra. */
+function confidenceOf(parses: number): ContentStat['confidence'] {
+  if (parses >= 50) return { label: 'amostra alta', level: 'alta' };
+  if (parses >= 15) return { label: 'amostra média', level: 'media' };
+  return { label: 'amostra baixa', level: 'baixa' };
 }
 
 @Component({
   selector: 'app-spec-detail',
   standalone: true,
-  imports: [RouterLink, LucideAngularModule, TooltipDirective],
+  imports: [RouterLink, LucideAngularModule, TooltipDirective, NgTemplateOutlet],
   templateUrl: './spec-detail.component.html',
   styleUrl: './spec-detail.component.scss',
+  // expõe a cor da classe pra página inteira (barras, destaques), não só pro header
+  host: { '[style.--class-color]': 'cls()?.color ?? null' },
 })
 export class SpecDetailComponent implements OnInit {
   readonly Icons = Icons;
@@ -62,7 +91,7 @@ export class SpecDetailComponent implements OnInit {
     ];
     for (const l of lookups) {
       const stats = sf.stats[l.combo]?.[cls.name]?.[name];
-      if (stats) rows.push({ label: l.label, metricLabel, stats });
+      if (stats) rows.push(this.toRow(l.label, metricLabel, stats));
     }
     return rows;
   });
@@ -83,9 +112,57 @@ export class SpecDetailComponent implements OnInit {
     ];
     for (const l of lookups) {
       const stats = sf.stats[l.combo]?.[cls.name]?.[name];
-      if (stats) rows.push({ label: l.label, metricLabel: 'DTPS', stats });
+      if (stats) rows.push(this.toRow(l.label, 'DTPS', stats));
     }
     return rows;
+  });
+
+  /** Enriquece o stat cru com o que a barra precisa pra ser desenhada. */
+  private toRow(label: string, metricLabel: string, stats: SpecStats): ContentStat {
+    const scale = Math.max(stats.max, stats.p95 ?? 0, stats.median, 1);
+    return {
+      label,
+      metricLabel,
+      stats,
+      medianPct: (stats.median / scale) * 100,
+      p95Pct: ((stats.p95 ?? stats.median) / scale) * 100,
+      confidence: confidenceOf(stats.parses),
+    };
+  }
+
+  /**
+   * Tabela por boss com as barras já normalizadas: cada célula é comparada
+   * com o melhor valor da própria spec naquela dificuldade, então dá pra ver
+   * de relance em quais bosses ela vai bem ou mal.
+   */
+  bossView = computed(() => {
+    const bs = this.bossStats();
+    if (!bs) return null;
+    const maxPerDifficulty: Partial<Record<RaidDifficulty, number>> = {};
+    for (const boss of bs.bosses) {
+      for (const d of this.raidDifficulties) {
+        const r = boss.results[d.key];
+        if (r && r.median > 0) {
+          maxPerDifficulty[d.key] = Math.max(maxPerDifficulty[d.key] ?? 0, r.median);
+        }
+      }
+    }
+    const rows: BossRow[] = bs.bosses.map(boss => ({
+      id: boss.id,
+      name: boss.name,
+      icon: boss.icon,
+      cells: this.raidDifficulties.map(d => {
+        const r = boss.results[d.key];
+        const max = maxPerDifficulty[d.key] ?? 0;
+        return {
+          difficulty: d.key,
+          median: r?.median ?? null,
+          parses: r?.parses ?? 0,
+          pct: r && max > 0 ? r.median / max : 0,
+        };
+      }),
+    }));
+    return { isHealer: bs.isHealer, unit: bs.isHealer ? 'HPS' : 'DPS', rows };
   });
 
   /** Só preenchido pra specs de healer com amostra suficiente */

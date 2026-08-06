@@ -5,6 +5,7 @@ import { LucideAngularModule, LucideIconData } from 'lucide-angular';
 import { DataService } from '../../data.service';
 import { TierService } from '../../tier.service';
 import { TooltipDirective } from '../../tooltip.directive';
+import { SegmentedDirective } from '../../segmented.directive';
 import { Icons } from '../../icons';
 import {
   ClassInfo, ContentType, DamageProfile, Role, SpecInfo, SpecStyle,
@@ -14,7 +15,7 @@ import {
 @Component({
   selector: 'app-tier-list',
   standalone: true,
-  imports: [RouterLink, LucideAngularModule, TooltipDirective],
+  imports: [RouterLink, LucideAngularModule, TooltipDirective, SegmentedDirective],
   templateUrl: './tier-list.component.html',
   styleUrl: './tier-list.component.scss',
 })
@@ -105,7 +106,7 @@ export class TierListComponent implements OnInit {
         : [],
   );
 
-  // índices pros indicadores deslizantes dos segmented controls
+  // índices que a diretiva coaSegmented usa pra achar o botão ativo e medi-lo
   contentIndex = computed(() => this.contents.findIndex(c => c.key === this.content()));
   difficultyIndex = computed(() => this.difficulties().findIndex(d => d.key === this.difficulty()));
   phaseIndex = computed(() => this.phases.findIndex(p => p.key === this.phase()));

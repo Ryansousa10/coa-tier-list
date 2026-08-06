@@ -8,6 +8,17 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: '2026-08-05',
+    title: 'Estatísticas da spec agora são visuais, e nomes dos filtros por extenso',
+    items: [
+      'A seção "Desempenho nos logs" deixou de ser uma tabela de números soltos: agora cada conteúdo é um card com uma barra que vai de zero até o recorde, mostrando de relance onde fica o desempenho típico, o teto realista (p95) e o recorde. Quanto mais espalhados, mais o resultado depende de gear e execução.',
+      'Cada card mostra também o tamanho da amostra com cor indicando o quanto dá pra confiar naquele número.',
+      'A tabela de "Desempenho por Boss" ganhou barras dentro das células, comparando cada boss com o melhor boss da spec naquela dificuldade — dá pra ver num relance em quais bosses a spec brilha e em quais ela sofre.',
+      'A mesma visualização vale pra seção de Sobrevivência dos tanks.',
+      'Os nomes dos filtros não são mais cortados ("Raid — Zul\'Gurub" e "Ascended" apareciam como "Raid — Zul..." e "Ascen...").',
+    ],
+  },
+  {
+    date: '2026-08-05',
     title: 'Filtros reorganizados, filtro de Melee/Ranged/Caster e visual modernizado',
     items: [
       'Novo filtro de Estilo pras specs de DPS: dá pra ver só Melee, só Ranged (dano físico à distância) ou só Caster. Specs de tank jogando como DPS entram em Melee.',
