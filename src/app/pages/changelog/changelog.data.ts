@@ -8,6 +8,15 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: '2026-08-05',
+    title: 'Todas as dificuldades da raid na página da spec',
+    items: [
+      'A seção "Desempenho nos logs" mostrava só Ascended e Normal — agora traz as 4 dificuldades de Zul\'Gurub (Ascended, Mythic, Heroic e Normal), e também as Dungeons no Normal, que faltavam.',
+      'Os cards passaram a ser agrupados por conteúdo, com a dificuldade no título de cada um, em vez de repetir "Zul\'Gurub" em todos.',
+      'Vale pra seção de Sobrevivência dos tanks também.',
+    ],
+  },
+  {
+    date: '2026-08-05',
     title: 'Estatísticas da spec agora são visuais, e nomes dos filtros por extenso',
     items: [
       'A seção "Desempenho nos logs" deixou de ser uma tabela de números soltos: agora cada conteúdo é um card com uma barra que vai de zero até o recorde, mostrando de relance onde fica o desempenho típico, o teto realista (p95) e o recorde. Quanto mais espalhados, mais o resultado depende de gear e execução.',

@@ -18,6 +18,11 @@ interface ContentStat {
   confidence: { label: string; level: 'alta' | 'media' | 'baixa' };
 }
 
+interface StatGroup {
+  title: string;
+  rows: ContentStat[];
+}
+
 interface BossCell {
   difficulty: RaidDifficulty;
   median: number | null;
@@ -74,48 +79,65 @@ export class SpecDetailComponent implements OnInit {
     { key: 'mythic', label: 'Mythic' },
     { key: 'ascended', label: 'Ascended' },
   ];
-  contentStats = computed<ContentStat[]>(() => {
+  contentStats = computed<StatGroup[]>(() => {
+    const spec = this.spec();
+    if (!spec) return [];
+    const metricLabel = spec.roles.includes('healer') ? 'HPS' : 'DPS';
+    return this.buildGroups(this.roleCombo(spec), metricLabel);
+  });
+
+  /** Só preenchido pra specs de tank — dano recebido (menor é melhor) */
+  dtpsStats = computed<StatGroup[]>(() => {
+    const spec = this.spec();
+    if (!spec || !spec.roles.includes('tank')) return [];
+    return this.buildGroups('dtps', 'DTPS');
+  });
+
+  /**
+   * Monta os cards agrupados por conteúdo. Cada dificuldade vira um card e o
+   * nome do conteúdo fica no cabeçalho do grupo, em vez de repetir
+   * "Zul'Gurub" em cada um dos quatro. Combos sem parses são omitidos, então
+   * spec pouco jogada simplesmente mostra menos cards.
+   */
+  private buildGroups(roleKey: string, metricLabel: string): StatGroup[] {
     const cls = this.cls();
     const spec = this.spec();
     const sf = this.statsFile();
     if (!cls || !spec || !sf) return [];
-    const isHealer = spec.roles.includes('healer');
-    const metricLabel = isHealer ? 'HPS' : 'DPS';
     const name = spec.logSpecNames.base;
-    const rows: ContentStat[] = [];
-    const lookups: { combo: string; label: string }[] = [
-      { combo: 'raid-zg-ascended-' + this.roleCombo(spec), label: "Zul'Gurub (Ascended)" },
-      { combo: 'raid-zg-normal-' + this.roleCombo(spec), label: "Zul'Gurub (Normal)" },
-      { combo: 'dungeons-p1-mythic-' + this.roleCombo(spec), label: 'Dungeons Fase 1 (Mythic)' },
-      { combo: 'worldboss-p1-' + this.roleCombo(spec), label: 'World Bosses Fase 1' },
-    ];
-    for (const l of lookups) {
-      const stats = sf.stats[l.combo]?.[cls.name]?.[name];
-      if (stats) rows.push(this.toRow(l.label, metricLabel, stats));
-    }
-    return rows;
-  });
 
-  /** Só preenchido pra specs de tank — dano recebido (menor é melhor) */
-  dtpsStats = computed<ContentStat[]>(() => {
-    const cls = this.cls();
-    const spec = this.spec();
-    const sf = this.statsFile();
-    if (!cls || !spec || !sf || !spec.roles.includes('tank')) return [];
-    const name = spec.logSpecNames.base;
-    const rows: ContentStat[] = [];
-    const lookups: { combo: string; label: string }[] = [
-      { combo: 'raid-zg-ascended-dtps', label: "Zul'Gurub (Ascended)" },
-      { combo: 'raid-zg-normal-dtps', label: "Zul'Gurub (Normal)" },
-      { combo: 'dungeons-p1-mythic-dtps', label: 'Dungeons Fase 1 (Mythic)' },
-      { combo: 'worldboss-p1-dtps', label: 'World Bosses Fase 1' },
+    const sources: { title: string; entries: { combo: string; label: string }[] }[] = [
+      {
+        title: "Zul'Gurub",
+        // da dificuldade mais alta pra mais baixa: o topo é o que interessa primeiro
+        entries: this.raidDifficulties
+          .map(d => ({ combo: `raid-zg-${d.key}-${roleKey}`, label: d.label }))
+          .reverse(),
+      },
+      {
+        title: 'Dungeons — Fase 1',
+        entries: [
+          { combo: `dungeons-p1-mythic-${roleKey}`, label: 'Mythic' },
+          { combo: `dungeons-p1-normal-${roleKey}`, label: 'Normal' },
+        ],
+      },
+      {
+        title: 'World Bosses — Fase 1',
+        entries: [{ combo: `worldboss-p1-${roleKey}`, label: 'Normal' }],
+      },
     ];
-    for (const l of lookups) {
-      const stats = sf.stats[l.combo]?.[cls.name]?.[name];
-      if (stats) rows.push(this.toRow(l.label, 'DTPS', stats));
+
+    const groups: StatGroup[] = [];
+    for (const src of sources) {
+      const rows: ContentStat[] = [];
+      for (const e of src.entries) {
+        const stats = sf.stats[e.combo]?.[cls.name]?.[name];
+        if (stats) rows.push(this.toRow(e.label, metricLabel, stats));
+      }
+      if (rows.length > 0) groups.push({ title: src.title, rows });
     }
-    return rows;
-  });
+    return groups;
+  }
 
   /** Enriquece o stat cru com o que a barra precisa pra ser desenhada. */
   private toRow(label: string, metricLabel: string, stats: SpecStats): ContentStat {

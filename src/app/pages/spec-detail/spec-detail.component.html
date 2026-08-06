@@ -33,7 +33,7 @@
         <strong>típico</strong>, o traço é o <strong>teto realista</strong> (p95) e a ponta é o
         <strong>recorde</strong>. Quanto mais distantes entre si, mais o resultado depende de gear e execução.
       </p>
-      <ng-container [ngTemplateOutlet]="statCards" [ngTemplateOutletContext]="{ rows: contentStats() }" />
+      <ng-container [ngTemplateOutlet]="statGroups" [ngTemplateOutletContext]="{ groups: contentStats() }" />
       <p class="footnote">Fonte: <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">coa.ascensionlogs.gg</a></p>
     </section>
   }
@@ -42,7 +42,7 @@
     <section class="card section">
       <h2>Sobrevivência (Dano Recebido)</h2>
       <p class="hint">Quanto dano a spec recebe por segundo tanqueando — aqui <strong>menor é melhor</strong>.</p>
-      <ng-container [ngTemplateOutlet]="statCards" [ngTemplateOutletContext]="{ rows: dtpsStats() }" />
+      <ng-container [ngTemplateOutlet]="statGroups" [ngTemplateOutletContext]="{ groups: dtpsStats() }" />
       <p class="footnote">Fonte: <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">coa.ascensionlogs.gg</a></p>
     </section>
   }
@@ -195,7 +195,18 @@
   }
 }
 
-<!-- Cards de estatística, usados tanto pelo desempenho quanto pela sobrevivência -->
+<!-- Cards de estatística, usados tanto pelo desempenho quanto pela sobrevivência.
+     Agrupados por conteúdo: o nome do conteúdo é o cabeçalho e cada card é
+     uma dificuldade. -->
+<ng-template #statGroups let-groups="groups">
+  @for (group of groups; track group.title) {
+    <div class="stat-group">
+      <h3 class="stat-group-title">{{ group.title }}</h3>
+      <ng-container [ngTemplateOutlet]="statCards" [ngTemplateOutletContext]="{ rows: group.rows }" />
+    </div>
+  }
+</ng-template>
+
 <ng-template #statCards let-rows="rows">
   <div class="stat-cards">
     @for (row of rows; track row.label) {
