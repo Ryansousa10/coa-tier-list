@@ -1,0 +1,156 @@
+<header class="page-head">
+  <h1><lucide-icon [img]="Icons.ranking" [size]="22" /> Rankings de Jogadores</h1>
+  <p class="subtitle">
+    Os melhores jogadores de cada conteúdo, por função e por spec. Clique no nome pra abrir
+    o perfil completo no AscensionLogs.
+  </p>
+</header>
+
+@if (loading()) {
+  <div class="loading">Carregando rankings…</div>
+} @else if (scopes().length === 0) {
+  <div class="loading">Os dados de ranking ainda não foram gerados.</div>
+} @else {
+  <section class="filters card">
+    <div class="filter-row">
+      <div class="segmented segmented-lg" coaSegmented [activeIndex]="scopeIndex()">
+        <span class="thumb" aria-hidden="true"></span>
+        @for (s of scopes(); track s.key) {
+          <button type="button" class="seg" [class.active]="scope()?.key === s.key" (click)="setScope(s.key)">
+            {{ s.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <div class="segmented" coaSegmented [activeIndex]="categoryIndex()">
+        <span class="thumb" aria-hidden="true"></span>
+        @for (c of categories(); track c.key) {
+          <button type="button" class="seg" [class.active]="category()?.key === c.key" (click)="setCategory(c.key)">
+            {{ c.label }}
+          </button>
+        }
+      </div>
+
+      <label class="spec-select">
+        <span class="field-label">Spec</span>
+        <select [value]="specFilter()" (change)="onSpecChange($event)">
+          <option value="all">Todas as specs</option>
+          @for (g of specGroups(); track g.className) {
+            <optgroup [label]="g.className">
+              @for (s of g.specs; track s) {
+                <option [value]="s">{{ s }}</option>
+              }
+            </optgroup>
+          }
+        </select>
+        <lucide-icon class="spec-chevron" [img]="Icons.chevron" [size]="16" />
+      </label>
+    </div>
+
+    @if (scope(); as s) {
+      <p class="callout">
+        <lucide-icon [img]="Icons.info" [size]="15" />
+        <span>
+          <strong>{{ scoreLabel() }}:</strong> {{ scoreHint() }}
+          Só entram jogadores com pelo menos <strong>{{ s.minKills }} bosses</strong> derrotados.
+        </span>
+      </p>
+    }
+  </section>
+
+  @if (lastUpdated(); as updated) {
+    <p class="last-updated">
+      <lucide-icon [img]="Icons.clock" [size]="14" />
+      Dados atualizados em {{ updated }}
+    </p>
+  }
+
+  @if (players().length === 0) {
+    <div class="loading">Nenhum jogador nesta combinação de filtros.</div>
+  } @else {
+    <!-- Pódio: os 3 primeiros em destaque -->
+    <section class="podium">
+      @for (p of podium(); track p.name + p.spec) {
+        <a class="podium-card" [class]="'place-' + p.rank" [href]="profileUrl(p)" target="_blank" rel="noopener">
+          <div class="podium-rank">
+            @if (p.rank === 1) {
+              <lucide-icon [img]="Icons.first" [size]="20" />
+            } @else {
+              <lucide-icon [img]="Icons.medal" [size]="18" />
+            }
+            <span>{{ p.rank }}º</span>
+          </div>
+          <div class="podium-name">{{ p.name }}</div>
+          <div class="podium-spec">{{ p.spec }} · {{ p.className }}</div>
+          <div class="podium-score">
+            {{ fmt(p.score) }}
+            <span class="podium-score-label">{{ scoreLabel() }}</span>
+          </div>
+          <div class="podium-kills">{{ p.totalKills }} bosses</div>
+        </a>
+      }
+    </section>
+
+    <section class="card table-card">
+      <div class="table-wrap">
+        <table class="ranking-table">
+          <colgroup>
+            <col class="col-rank" />
+            <col class="col-player" />
+            @for (d of scope()!.difficulties; track d.key) {
+              <col class="col-diff" />
+            }
+            <col class="col-score" />
+            <col class="col-kills" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Jogador</th>
+              @for (d of scope()!.difficulties; track d.key) {
+                <th class="num">{{ d.label }}</th>
+              }
+              <th class="num" [coaTooltip]="scoreHint()">{{ scoreLabel() }}</th>
+              <th class="num" coaTooltip="Bosses distintos com registro, somando todas as dificuldades">Bosses</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of players(); track p.name + p.spec) {
+              <tr [class.is-top]="p.rank <= 3">
+                <td class="rank">{{ p.rank }}</td>
+                <td class="player">
+                  <a [href]="profileUrl(p)" target="_blank" rel="noopener"
+                     [coaTooltip]="'Abrir o perfil de ' + p.name + ' no AscensionLogs'">
+                    <span class="player-name">{{ p.name }}</span>
+                    <lucide-icon class="player-link" [img]="Icons.external" [size]="13" />
+                  </a>
+                  <span class="player-spec">{{ p.spec }} · {{ p.className }}</span>
+                </td>
+                @for (d of scope()!.difficulties; track d.key) {
+                  @if (p.results[d.key]; as r) {
+                    <td class="num" [coaTooltip]="resultTooltip(p, d.key)">
+                      {{ fmt(r.avg !== null ? r.avg : r.points) }}
+                    </td>
+                  } @else {
+                    <td class="num no-data">—</td>
+                  }
+                }
+                <td class="num score">
+                  <span class="score-bar"><span class="score-fill" [style.width]="scoreBar(p)"></span></span>
+                  <span class="score-value">{{ fmt(p.score) }}</span>
+                </td>
+                <td class="num kills">{{ p.totalKills }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="footnote">
+        {{ players().length }} jogadores ·
+        Dados de <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">coa.ascensionlogs.gg</a>
+      </p>
+    </section>
+  }
+}

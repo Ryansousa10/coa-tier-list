@@ -5,10 +5,13 @@ import {
   ChevronDown,
   Clock3,
   Crosshair,
+  Crown,
+  ExternalLink,
   Flame,
   Gauge,
   HeartPulse,
   Info,
+  Medal,
   RotateCcw,
   Shield,
   SlidersHorizontal,
@@ -17,6 +20,7 @@ import {
   Swords,
   Target,
   TriangleAlert,
+  Trophy,
   Zap,
 } from 'lucide-angular';
 
@@ -44,4 +48,10 @@ export const Icons = {
   // avisos nos cards de spec
   lowSample: TriangleAlert,
   highVariance: Flame,
+
+  // rankings
+  ranking: Trophy,
+  first: Crown,
+  medal: Medal,
+  external: ExternalLink,
 } as const;

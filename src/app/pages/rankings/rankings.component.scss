@@ -1,0 +1,294 @@
+:host { display: block; padding-bottom: 40px; }
+
+.page-head { margin-bottom: 16px; }
+
+.page-head h1 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  color: var(--accent-soft);
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  max-width: 72ch;
+}
+
+.loading { text-align: center; padding: 48px 0; color: var(--text-dim); }
+
+/* ------------------------------------------------------------------ filtros */
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+/* select nativo (bom no mobile) com aparência do resto do site */
+.spec-select {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+
+  select {
+    appearance: none;
+    padding: 8px 34px 8px 14px;
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font: inherit;
+    font-size: 0.86rem;
+    font-weight: 600;
+    cursor: pointer;
+    max-width: 260px;
+
+    &:hover { border-color: var(--accent); }
+    &:focus-visible { outline: none; box-shadow: var(--ring); }
+  }
+
+  optgroup { color: var(--text-dim); }
+  option { color: var(--text); background: var(--panel); font-weight: 400; }
+}
+
+.spec-chevron {
+  position: absolute;
+  right: 11px;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+
+.callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  line-height: 1.5;
+
+  lucide-icon { flex: 0 0 auto; margin-top: 2px; color: var(--accent-soft); }
+  strong { color: var(--accent-soft); }
+}
+
+.last-updated {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  margin: 0 0 18px;
+}
+
+/* ------------------------------------------------------------------- pódio */
+
+.podium {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.podium-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 16px 18px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--place-color, var(--border));
+  color: var(--text);
+  text-decoration: none;
+  box-shadow: var(--shadow);
+  transition: transform 0.15s var(--ease), background 0.15s var(--ease);
+
+  &:hover { text-decoration: none; transform: translateY(-2px); background: var(--panel-hover); }
+
+  &.place-1 { --place-color: #ffc93c; }
+  &.place-2 { --place-color: #cfd6e4; }
+  &.place-3 { --place-color: #d08a53; }
+}
+
+.podium-rank {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--place-color);
+  font-weight: 700;
+  font-size: 0.86rem;
+}
+
+.podium-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.podium-spec { font-size: 0.8rem; color: var(--text-dim); }
+
+.podium-score {
+  margin-top: 6px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.podium-score-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-dim);
+  margin-left: 4px;
+}
+
+.podium-kills { font-size: 0.76rem; color: var(--text-dim); }
+
+/* ------------------------------------------------------------------ tabela */
+
+.table-card { padding: 6px 0 14px; }
+
+.table-wrap { overflow-x: auto; }
+
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.88rem;
+
+  th, td {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    color: var(--text-dim);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tbody tr:hover { background: var(--bg-alt); }
+
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+}
+
+.col-rank { width: 54px; }
+.col-player { width: 210px; }
+.col-diff { width: 92px; }
+.col-score { width: 150px; }
+.col-kills { width: 84px; }
+
+.rank {
+  color: var(--text-dim);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+tr.is-top .rank { color: var(--accent); }
+
+.player {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text);
+    min-width: 0;
+
+    &:hover { color: var(--accent-soft); text-decoration: none; }
+  }
+}
+
+.player-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-link { flex: 0 0 auto; color: var(--text-dim); }
+
+.player-spec {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.no-data { color: var(--text-dim); }
+
+/* score com barra relativa ao 1º da lista atual */
+.score {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.score-bar {
+  flex: 1;
+  min-width: 40px;
+  height: 6px;
+  border-radius: 999px;
+  background: #0a0d14;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.score-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-soft), var(--accent));
+}
+
+.score-value { font-weight: 700; flex: 0 0 auto; }
+
+.kills { color: var(--text-dim); }
+
+.footnote {
+  margin: 12px 16px 0;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 720px) {
+  .spec-select { margin-left: 0; width: 100%; }
+  .spec-select select { flex: 1; max-width: none; }
+}

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BisFile, BossStatsFile, ClassInfo, StatsFile, TankFocusFile } from './models';
+import { BisFile, BossStatsFile, ClassInfo, RankingsFile, StatsFile, TankFocusFile } from './models';
 
 const SOURCE_LABELS: Record<string, string> = {
   raid: 'Raid', dungeon: 'Dungeon', worldboss: 'World Boss', worldforged: 'Worldforged',
@@ -12,6 +12,7 @@ export class DataService {
   private classesPromise?: Promise<ClassInfo[]>;
   private statsPromise?: Promise<StatsFile>;
   private tankFocusPromise?: Promise<TankFocusFile | null>;
+  private rankingsPromise?: Promise<RankingsFile | null>;
   private bisCache = new Map<string, Promise<BisFile | null>>();
   private bossStatsCache = new Map<string, Promise<BossStatsFile | null>>();
 
@@ -28,6 +29,18 @@ export class DataService {
   loadTankFocus(): Promise<TankFocusFile | null> {
     this.tankFocusPromise ??= fetch('data/tank-focus.json').then(r => (r.ok ? r.json() : null)).catch(() => null);
     return this.tankFocusPromise;
+  }
+
+  /** Só a tela de Rankings carrega — é o maior arquivo de dados do site. */
+  loadRankings(): Promise<RankingsFile | null> {
+    this.rankingsPromise ??= fetch('data/rankings.json').then(r => (r.ok ? r.json() : null)).catch(() => null);
+    return this.rankingsPromise;
+  }
+
+  /** Link pro perfil do jogador no AscensionLogs. */
+  playerUrl(name: string, location: string, phase: number, difficulty: string): string {
+    const q = new URLSearchParams({ phase: String(phase), location, difficulty });
+    return `https://coa.ascensionlogs.gg/characters/${encodeURIComponent(name)}?${q}`;
   }
 
   loadBis(classKey: string, specKey: string): Promise<BisFile | null> {

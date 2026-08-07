@@ -37,14 +37,6 @@
   min-width: 0;
 }
 
-.field-label {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  color: var(--text-dim);
-  font-weight: 600;
-}
-
 .field-hint {
   margin: 0;
   font-size: 0.79rem;
@@ -53,74 +45,8 @@
   max-width: 60ch;
 }
 
-/* Segmented control: um indicador desliza atrás do item ativo em vez de cada
-   botão acender sozinho — deixa claro que é uma escolha entre opções. */
-.segmented {
-  --pad: 4px;
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  padding: var(--pad);
-  gap: 2px;
-  background: var(--bg-alt);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  max-width: 100%;
-
-  /* Posição e tamanho vêm medidos da diretiva coaSegmented (o botão ativo),
-     então cada item pode ter a largura natural do texto sem cortar nada. */
-  .thumb {
-    position: absolute;
-    top: var(--thumb-y, var(--pad));
-    left: var(--thumb-x, var(--pad));
-    width: var(--thumb-w, 0);
-    height: var(--thumb-h, 0);
-    border-radius: calc(var(--radius) - var(--pad));
-    background: linear-gradient(180deg, var(--accent), #f0a000);
-    box-shadow: var(--shadow-sm);
-    transition: left 0.32s var(--ease), top 0.32s var(--ease),
-                width 0.32s var(--ease), height 0.32s var(--ease);
-  }
-}
-
-.seg {
-  position: relative;
-  z-index: 1;
-  flex: 0 0 auto;
-  padding: 7px 14px;
-  border: none;
-  background: transparent;
-  border-radius: calc(var(--radius) - var(--pad));
-  color: var(--text-dim);
-  font-size: 0.86rem;
-  /* peso igual nos dois estados de propósito: se o ativo engordasse, a largura
-     do botão mudaria no clique e o indicador (que é medido) ficaria defasado */
-  font-weight: 600;
-  white-space: nowrap;
-  transition: color 0.2s var(--ease);
-
-  &:hover:not(.active) { color: var(--text); }
-
-  &.active { color: #1a1200; }
-
-  &:focus-visible {
-    outline: none;
-    box-shadow: var(--ring);
-  }
-}
-
-.seg-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-
-  lucide-icon { flex: 0 0 auto; }
-}
-
-.segmented-lg {
-  .seg { padding: 9px 14px; font-size: 0.92rem; }
-}
+/* .segmented / .seg / .field-label moraram aqui, mas foram pra styles.scss
+   quando a tela de Rankings passou a usar o mesmo controle. */
 
 .reset {
   display: inline-flex;
@@ -206,7 +132,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .segmented .thumb, .chevron, .advanced-body { transition: none; animation: none; }
+  .chevron, .advanced-body { transition: none; animation: none; }
 }
 
 /* ---------------------------------------------------------------- conteúdo */
@@ -442,8 +368,6 @@
 
 @media (max-width: 640px) {
   .filters { padding: 12px; }
-  .segmented-lg .seg { padding: 8px 10px; font-size: 0.82rem; }
-  .seg { padding: 7px 10px; font-size: 0.8rem; }
   .tier-badge { flex-basis: 44px; font-size: 1.5rem; }
   .tier-specs { grid-template-columns: 1fr 1fr; }
   .spec-card { padding: 6px 8px; }

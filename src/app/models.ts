@@ -145,6 +145,51 @@ export interface TankFocusFile {
   specs: Record<string, TankFocusEntry>; // key = "<classKey>-<specKey>"
 }
 
+/**
+ * Ranking de jogadores — ver tools/scrape/rankings.mjs.
+ * `avg` só existe onde a média por boss faz sentido (Zul'Gurub, pool de 10
+ * bosses); em dungeons o pool tem 239 bosses e a pontuação premia cobertura,
+ * então lá o ranking é por pontos totais e `avg` vem null.
+ */
+export interface RankingResult {
+  points: number;
+  bossesKilled: number;
+  avg: number | null;
+}
+
+export interface RankingPlayer {
+  name: string;
+  className: string;
+  spec: string;
+  results: Record<string, RankingResult>;
+  totalKills: number;
+  score: number;
+}
+
+export interface RankingCategory {
+  key: string;
+  label: string;
+  specs: string[];
+  players: RankingPlayer[];
+}
+
+export interface RankingScope {
+  key: string;
+  label: string;
+  location: string;
+  phase: number;
+  /** 'avg' = all-star médio por boss (0-100); 'points' = pontos totais */
+  scoreKind: 'avg' | 'points';
+  minKills: number;
+  difficulties: { key: string; label: string }[];
+  categories: RankingCategory[];
+}
+
+export interface RankingsFile {
+  extractedAt: string;
+  scopes: RankingScope[];
+}
+
 export interface TierFilter {
   content: ContentType;
   difficulty: string; // raid: ascended|mythic|heroic|normal — dungeons: normal|mythic

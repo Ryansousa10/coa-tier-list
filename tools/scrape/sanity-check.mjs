@@ -18,6 +18,7 @@ const MIN = {
   bossCombosWithData: 25,    // de 52
   bisbeardClassSpecs: 50,    // de 70
   items: 15000,              // de ~24k
+  rankingEntries: 800,       // de ~1500 (2 conteúdos x 4 categorias)
 };
 
 let ok = true;
@@ -39,6 +40,12 @@ check('class/spec entries (BisBeard)', (meta.classSpecs || []).length, MIN.bisbe
 
 const items = JSON.parse(fs.readFileSync(path.join(RAW, 'bisbeard-items-p1.json'), 'utf8'));
 check('itens (BisBeard)', items.length, MIN.items);
+
+const rankings = JSON.parse(fs.readFileSync(path.join(RAW, 'rankings-raw.json'), 'utf8'));
+const rankingEntries = Object.values(rankings.data || {})
+  .flatMap(scope => Object.values(scope).map(cat => cat.entries?.length ?? 0))
+  .reduce((a, b) => a + b, 0);
+check('entradas de ranking', rankingEntries, MIN.rankingEntries);
 
 // Foco de cura em tanks: soft-check (não bloqueia o pipeline) — é uma
 // amostra bem mais pesada e nova, não deveria travar a atualização dos

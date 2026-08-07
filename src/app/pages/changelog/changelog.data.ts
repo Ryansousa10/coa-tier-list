@@ -7,6 +7,17 @@ export interface ChangelogEntry {
 /** Mais recente primeiro. Adicione uma entrada no topo a cada atualização relevante. */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: '2026-08-06',
+    title: 'Nova tela: Rankings de Jogadores',
+    items: [
+      'Nova página de Rankings com os melhores jogadores de Zul\'Gurub e de Dungeons Mythic, separados por função (DPS, Tank, Healer e Support) e filtráveis por spec.',
+      'No ranking de Zul\'Gurub dá pra ver a pontuação do jogador em cada uma das 4 dificuldades e a média geral da raid.',
+      'Clicando no nome do jogador você vai direto pro perfil dele no AscensionLogs.',
+      'Os 3 primeiros de cada ranking aparecem em destaque no pódio, e ao filtrar por spec a numeração se ajusta pra mostrar o top daquela spec.',
+      'A pontuação usa critérios diferentes por conteúdo, porque ela significa coisas diferentes: em Zul\'Gurub é a nota média por boss (0 a 100), já que a raid tem 10 bosses; em Dungeons são os pontos totais do AscensionLogs, que premiam cobertura (quantos dos 239 bosses o jogador parseia bem).',
+    ],
+  },
+  {
     date: '2026-08-05',
     title: 'Corrige as barras da tabela "Desempenho por Boss"',
     items: [

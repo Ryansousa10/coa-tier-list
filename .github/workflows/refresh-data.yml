@@ -57,6 +57,12 @@ jobs:
             mcr.microsoft.com/playwright:v1.62.1-noble \
             node tools/scrape/healer-tank-focus.mjs
 
+      - name: Extrair rankings de jogadores
+        run: |
+          docker run --rm -v "$PWD:/work" -w /work \
+            mcr.microsoft.com/playwright:v1.62.1-noble \
+            node tools/scrape/rankings.mjs
+
       - name: Checagem de sanidade (aborta se os dados vierem incompletos)
         run: node tools/scrape/sanity-check.mjs
 

@@ -415,6 +415,115 @@ if (fs.existsSync(bossStatsRawPath) && fs.existsSync(bossMetaPath)) {
   console.log('boss-stats files:', bossFilesWritten);
 }
 
+// ---------------------------------------------------------------- rankings.json
+// Ranking de jogadores por conteúdo/categoria/spec — ver tools/scrape/rankings.mjs.
+//
+// A pontuação muda de significado conforme o conteúdo, e por isso cada escopo
+// tem seu próprio jeito de ranquear:
+//   - Zul'Gurub tem 10 bosses e `bosses_killed` chega a 10, então
+//     pontos/bosses é o all-star score médio por boss (0-100) — é a "média"
+//     de verdade e é comparável entre dificuldades.
+//   - "All Dungeons" tem 239 bosses no pool e ninguém cobre todos; ali
+//     `total_points` premia COBERTURA (quantos bosses você parseou bem), e
+//     dividir por bosses inverte a ordem do próprio site. Então lá ranqueamos
+//     pelos pontos totais, que é a convenção do AscensionLogs.
+const rankingsRawPath = path.join(RAW, 'rankings-raw.json');
+if (fs.existsSync(rankingsRawPath)) {
+  const raw = JSON.parse(fs.readFileSync(rankingsRawPath, 'utf8'));
+
+  const SCOPE_CONFIG = {
+    'raid-zg': { scoreKind: 'avg', minKills: 10 },
+    'dungeons-mythic': { scoreKind: 'points', minKills: 10 },
+  };
+  const DIFFICULTY_LABELS = {
+    ascended: 'Ascended', mythic: 'Mythic', heroic: 'Heroic', normal: 'Normal',
+  };
+  const TOP_OVERALL = 100;
+  const TOP_PER_SPEC = 10;
+
+  const scopes = [];
+  for (const scopeMeta of raw.scopes) {
+    const cfg = SCOPE_CONFIG[scopeMeta.key];
+    if (!cfg) continue;
+    const scopeData = raw.data[scopeMeta.key] || {};
+    const categories = [];
+
+    for (const catMeta of raw.categories) {
+      const entries = scopeData[catMeta.key]?.entries ?? [];
+      const players = [];
+
+      for (const e of entries) {
+        let totalPoints = 0;
+        let totalKills = 0;
+        const results = {};
+        for (const [diff, r] of Object.entries(e.results)) {
+          totalPoints += r.points;
+          totalKills += r.bossesKilled || 0;
+          results[diff] = {
+            points: Math.round(r.points * 10) / 10,
+            bossesKilled: r.bossesKilled ?? 0,
+            // média por boss só faz sentido onde o pool de bosses é pequeno
+            avg: cfg.scoreKind === 'avg' && r.bossesKilled > 0
+              ? Math.round((r.points / r.bossesKilled) * 10) / 10
+              : null,
+          };
+        }
+        if (totalKills < cfg.minKills) continue;
+        const score = cfg.scoreKind === 'avg'
+          ? totalPoints / totalKills          // all-star médio por boss (0-100)
+          : totalPoints;                      // convenção do site pra dungeons
+        players.push({
+          name: e.name,
+          className: e.className,
+          spec: e.spec,
+          results,
+          totalKills,
+          score: Math.round(score * 10) / 10,
+        });
+      }
+
+      players.sort((a, b) => b.score - a.score);
+
+      // recorte: top geral + top de cada spec, pra o filtro por spec ter conteúdo
+      const keep = new Set(players.slice(0, TOP_OVERALL));
+      const perSpec = {};
+      for (const p of players) {
+        perSpec[p.spec] = (perSpec[p.spec] || 0) + 1;
+        if (perSpec[p.spec] <= TOP_PER_SPEC) keep.add(p);
+      }
+      const kept = players.filter(p => keep.has(p));
+      if (kept.length === 0) continue;
+
+      categories.push({
+        key: catMeta.key,
+        label: catMeta.label,
+        specs: [...new Set(kept.map(p => p.spec))].sort(),
+        players: kept,
+      });
+    }
+
+    if (categories.length > 0) {
+      scopes.push({
+        key: scopeMeta.key,
+        label: scopeMeta.label,
+        location: scopeMeta.location,
+        phase: scopeMeta.phase ?? 1,
+        scoreKind: cfg.scoreKind,
+        minKills: cfg.minKills,
+        difficulties: scopeMeta.difficulties.map(d => ({ key: d, label: DIFFICULTY_LABELS[d] || d })),
+        categories,
+      });
+    }
+  }
+
+  fs.writeFileSync(path.join(OUT, 'rankings.json'), JSON.stringify({
+    extractedAt: raw.extractedAt,
+    scopes,
+  }));
+  const totalPlayers = scopes.reduce((n, s) => n + s.categories.reduce((m, c) => m + c.players.length, 0), 0);
+  console.log('rankings.json:', scopes.length, 'conteúdos,', totalPlayers, 'entradas');
+}
+
 // -------------------------------------------------------------- tank-focus.json
 // Quanto da cura efetiva de cada spec de healer vai pros tanks vs pro resto
 // do raid — ver tools/scrape/healer-tank-focus.mjs (amostra de top parses,
