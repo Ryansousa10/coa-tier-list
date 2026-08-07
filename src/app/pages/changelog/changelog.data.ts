@@ -8,6 +8,15 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: '2026-08-07',
+    title: 'Rankings: corrige a conta do Best Perf. Avg em Zul\'Gurub e remove a média entre dificuldades',
+    items: [
+      'Achamos um caso (Analli, Zul\'Gurub Mythic) onde a tela mostrava 51,2% pra quem tinha matado só 1 dos 10 bosses, enquanto o perfil real dela no AscensionLogs mostra 5,1%. A causa: dividíamos a soma dos percentis pelo número de bosses que a pessoa matou, mas em Zul\'Gurub (raid fechada de 10 bosses) o site oficial sempre divide pelos 10, contando boss não derrotado como 0 — um clear parcial tem que mostrar um número baixo, não um número alto e enganoso. A conta de Dungeons não tinha esse problema (lá não existe "clear completo", então dividir pelos bosses enfrentados já estava certo) e continua igual.',
+      'Removemos a média combinando as 4 dificuldades de Zul\'Gurub num número só — nem o AscensionLogs tem isso, e inventar uma escondia justamente o problema acima. A tela agora tem um seletor de dificuldade (Ascended/Mythic/Heroic/Normal) e o ranking é sempre de uma dificuldade por vez, igual ao site oficial.',
+      'A coluna "Bosses" também não mostra mais "X / 239" em Dungeons — esse 239 é a soma de bosses de dezenas de instances diferentes, não um alvo de clear, e mostrar isso do lado do "X" dava a entender (errado) que existe um clear completo ali.',
+    ],
+  },
+  {
+    date: '2026-08-07',
     title: 'Rankings agora usam o Best Perf. Avg oficial do AscensionLogs',
     items: [
       'A pontuação mostrada nos Rankings mudou pra "Best Perf. Avg" — o mesmo número que aparece no perfil de cada jogador no AscensionLogs (a média do seu percentil de rank em cada boss, comparado com todo mundo que já matou aquele boss naquela dificuldade). Antes usávamos uma conta própria em cima dos pontos All-Star, que não batia com o que aparece no site oficial.',

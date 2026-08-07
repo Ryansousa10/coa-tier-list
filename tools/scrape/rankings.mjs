@@ -4,13 +4,24 @@
 // agregados (tentamos, os números não batiam de forma confiável com o total
 // oficial da zona — ver histórico do projeto).
 //
-// A fórmula, direto da FAQ deles (coa.ascensionlogs.gg/faq#what-is-a-parse):
+// A fórmula, direto da FAQ deles (coa.ascensionlogs.gg/faq#what-is-a-parse)
+// MAIS um detalhe que a FAQ não deixa claro e só descobrimos comparando com
+// o perfil de verdade — o divisor da média muda dependendo se a zona tem um
+// "clear completo" bem definido:
 //   - por boss: percentil = 100 × (cohort_size - seu_rank) / cohort_size
 //     (rank 1 = 100, cohort é todo mundo que matou aquele boss naquela
 //     dificuldade/bracket/fase — cross-class, não por spec)
-//   - "Best %"/"Best Perf. Avg": média desses percentis pelos bosses que a
-//     pessoa matou. Só sobe (fica no pico historico), nunca cai.
-// Verificado batendo 78.11 (calculado) com 78.1 (mostrado no perfil real).
+//   - "Best %"/"Best Perf. Avg" soma esses percentis, mas o QUE DIVIDE muda:
+//     · Zul'Gurub tem exatamente 10 bosses fixos — a média divide pelos 10
+//       SEMPRE, mesmo se a pessoa só matou 1. Boss não matado conta 0.
+//       Verificado: Analli matou só 1 boss no Mythic (percentil 51.2 nesse
+//       boss) e o perfil mostra "Best Perf. Avg: 5.1" = 51.2 ÷ 10, não 51.2.
+//     · "All Dungeons" agrega dezenas de instances sem um "clear completo"
+//       definido (pool de 239 bosses só nesta fase), então ali a média
+//       divide pelos bosses REALMENTE atacados — verificado com outro
+//       jogador batendo ~89.8 (calculado) com 88.3 (perfil real; a
+//       diferença pequena é provavelmente o cache de 30min do site).
+// Isso é `divideBy: 'zonePool' | 'attempted'` em cada escopo abaixo.
 //
 // Detalhes da API descobertos testando:
 //   - `/api/encounters/rankings/overall` (lote, por conteúdo/dificuldade) NÃO
@@ -64,6 +75,7 @@ const SCOPES = [
     location: "Zul'Gurub",
     phase: 1,
     difficulties: ['ascended', 'mythic', 'heroic', 'normal'],
+    divideBy: 'zonePool',
   },
   {
     key: 'dungeons-mythic',
@@ -71,6 +83,7 @@ const SCOPES = [
     location: 'All Dungeons',
     phase: 1,
     difficulties: ['mythic'],
+    divideBy: 'attempted',
   },
 ];
 
@@ -242,7 +255,13 @@ async function main() {
               const rows = (j.rows || []).filter(row => row[percentileField] != null);
               if (rows.length > 0) {
                 const sum = rows.reduce((acc, row) => acc + row[percentileField], 0);
-                results[diff] = { avg: sum / rows.length, bossesKilled: rows.length };
+                // zonePool: divide pelo total FIXO de bosses da zona (boss não
+                // matado conta 0) — attempted: divide só pelos que a pessoa
+                // realmente tem dado (ver comentário grande no topo do arquivo).
+                const divisor = scope.divideBy === 'zonePool' && cand.totalBosses
+                  ? cand.totalBosses
+                  : rows.length;
+                results[diff] = { avg: sum / divisor, bossesKilled: rows.length };
               }
             } catch (err) {
               results[diff] = { error: String(err) };

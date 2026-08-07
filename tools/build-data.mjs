@@ -416,21 +416,17 @@ if (fs.existsSync(bossStatsRawPath) && fs.existsSync(bossMetaPath)) {
 }
 
 // ---------------------------------------------------------------- rankings.json
-// Ranking de jogadores por conteúdo/categoria/spec — ver tools/scrape/rankings.mjs.
-//
-// A pontuação é o "Best Perf. Avg" que o próprio AscensionLogs mostra no
-// perfil de cada personagem: a média do percentil (rank vs. cross-class,
-// naquele boss/dificuldade/bracket/fase) dos bosses que a pessoa matou.
-// Mesma fórmula pros dois conteúdos — diferente da versão anterior, que usava
-// os pontos All-Star (soma, não média) e precisava de um critério à parte pra
-// Zul'Gurub vs. Dungeons porque os pools de boss são bem diferentes (10 vs.
-// 239). Percentil é sempre 0-100 não importa quantos bosses existem no total,
-// então agora os dois conteúdos usam exatamente a mesma conta.
+// Ranking de jogadores por conteúdo/categoria/spec/dificuldade — ver
+// tools/scrape/rankings.mjs. A pontuação é o "Best Perf. Avg" que o próprio
+// AscensionLogs mostra no perfil de cada personagem, SEMPRE de uma
+// dificuldade específica — não existe (nem no site oficial) uma média
+// combinando dificuldades diferentes, então não inventamos uma aqui: a tela
+// deixa o usuário escolher a dificuldade e ranqueia só por ela, igual ao
+// site. Cada `results[diff].avg` já vem pronto de rankings.mjs.
 const rankingsRawPath = path.join(RAW, 'rankings-raw.json');
 if (fs.existsSync(rankingsRawPath)) {
   const raw = JSON.parse(fs.readFileSync(rankingsRawPath, 'utf8'));
 
-  const MIN_KILLS = 10;
   // "amostra baixa" é um piso absoluto de bosses distintos, não uma % do pool
   // — pool varia demais entre Zul'Gurub (10) e Dungeons (239) pra uma fração
   // fazer sentido nos dois. 5 é o mesmo piso já usado no resto do site.
@@ -451,34 +447,34 @@ if (fs.existsSync(rankingsRawPath)) {
       const players = [];
 
       for (const e of entries) {
-        let weightedSum = 0; // soma de (percentil × bosses) de cada dificuldade
-        let totalKills = 0;
         const results = {};
         for (const [diff, r] of Object.entries(e.results)) {
           if (!(r.bossesKilled > 0)) continue;
-          weightedSum += r.avg * r.bossesKilled;
-          totalKills += r.bossesKilled;
           results[diff] = {
             avg: Math.round(r.avg * 10) / 10,
             bossesKilled: r.bossesKilled,
             lowSample: r.bossesKilled < LOW_SAMPLE_KILLS,
           };
         }
-        if (totalKills < MIN_KILLS) continue;
+        if (Object.keys(results).length === 0) continue;
         players.push({
           name: e.name,
           className: e.className,
           spec: e.spec,
           results,
-          totalKills,
-          totalBosses: e.totalBosses ?? null,
-          score: Math.round((weightedSum / totalKills) * 10) / 10,
+          // só faz sentido mostrar "X / totalBosses" onde há um pool fechado
+          // (Zul'Gurub); em Dungeons o "total" da API é a soma de bosses de
+          // dezenas de instances diferentes, não um alvo de clear — mostrar
+          // isso junto do "X" contradiria a própria explicação da tela.
+          totalBosses: scopeMeta.key === 'raid-zg' ? (e.totalBosses ?? null) : null,
         });
       }
 
-      players.sort((a, b) => b.score - a.score);
-
-      // recorte: top geral + top de cada spec, pra o filtro por spec ter conteúdo
+      // recorte: melhor dificuldade de cada um só decide quem entra no
+      // arquivo (top geral + top de cada spec) — o ranking de verdade, por
+      // dificuldade específica, é montado na tela a partir da lista inteira.
+      const bestAvg = (p) => Math.max(...Object.values(p.results).map(r => r.avg));
+      players.sort((a, b) => bestAvg(b) - bestAvg(a));
       const keep = new Set(players.slice(0, TOP_OVERALL));
       const perSpec = {};
       for (const p of players) {
@@ -514,7 +510,6 @@ if (fs.existsSync(rankingsRawPath)) {
         label: scopeMeta.label,
         location: scopeMeta.location,
         phase: scopeMeta.phase ?? 1,
-        minKills: MIN_KILLS,
         difficulties: scopeMeta.difficulties.map(d => ({ key: d, label: DIFFICULTY_LABELS[d] || d })),
         categories,
       });

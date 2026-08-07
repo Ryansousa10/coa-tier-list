@@ -147,12 +147,18 @@ export interface TankFocusFile {
 
 /**
  * Ranking de jogadores — ver tools/scrape/rankings.mjs.
- * `avg` é o "Best Perf. Avg" do AscensionLogs: a média do percentil (rank vs.
- * cross-class) dos bosses derrotados naquela dificuldade — mesma fórmula pra
- * Zul'Gurub e Dungeons, sempre 0-100.
- * `lowSample` é true quando `avg` vem de poucos bosses (< 5) — um único boss
- * pode bater o topo de um grupo raso de competidores e mostrar 100, o que
- * parece mais confiável do que é.
+ * `avg` é o "Best Perf. Avg" do AscensionLogs pra UMA dificuldade específica:
+ * a média do percentil (rank vs. cross-class) dos bosses da zona. Em
+ * Zul'Gurub (zona fechada de 10 bosses) divide sempre pelos 10, boss não
+ * matado conta 0 — por isso um clear parcial mostra um número baixo de
+ * verdade, não um número alto e enganoso. Em Dungeons (agregado de dezenas
+ * de instances sem um "clear completo" definido) divide pelos bosses
+ * realmente atacados.
+ * Não existe (nem no AscensionLogs) uma média combinando dificuldades
+ * diferentes — por isso não inventamos uma: o ranking é sempre de uma
+ * dificuldade por vez, escolhida na tela.
+ * `lowSample` é true quando `avg` vem de poucos bosses (< 5) — ainda pode
+ * acontecer de bater o topo de um grupo raso de competidores.
  */
 export interface RankingResult {
   avg: number;
@@ -165,10 +171,8 @@ export interface RankingPlayer {
   className: string;
   spec: string;
   results: Record<string, RankingResult>;
-  totalKills: number;
-  /** Tamanho do pool de bosses do conteúdo (10 em Zul'Gurub) — usado pra explicar o lowSample. */
+  /** Tamanho do pool de bosses do conteúdo (10 em Zul'Gurub) — usado pra explicar o divisor. */
   totalBosses: number | null;
-  score: number;
 }
 
 /**
@@ -190,7 +194,6 @@ export interface RankingScope {
   label: string;
   location: string;
   phase: number;
-  minKills: number;
   difficulties: { key: string; label: string }[];
   categories: RankingCategory[];
 }

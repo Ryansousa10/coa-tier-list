@@ -1,8 +1,8 @@
 <header class="page-head">
   <h1><lucide-icon [img]="Icons.ranking" [size]="22" /> Rankings de Jogadores</h1>
   <p class="subtitle">
-    Os melhores jogadores de cada conteúdo, por função e por spec. Clique no nome pra abrir
-    o perfil completo no AscensionLogs.
+    Os melhores jogadores de cada conteúdo, por função, dificuldade e spec. Clique no nome pra
+    abrir o perfil completo no AscensionLogs.
   </p>
 </header>
 
@@ -32,6 +32,17 @@
           </button>
         }
       </div>
+
+      @if (showDifficultyPicker()) {
+        <div class="segmented" coaSegmented [activeIndex]="difficultyIndex()">
+          <span class="thumb" aria-hidden="true"></span>
+          @for (d of difficulties(); track d.key) {
+            <button type="button" class="seg" [class.active]="difficultyKey() === d.key" (click)="setDifficulty(d.key)">
+              {{ d.label }}
+            </button>
+          }
+        </div>
+      }
 
       <!-- dropdown próprio em vez de <select>: o nativo não renderiza os
            ícones das specs, que são o que faz achar a spec de relance -->
@@ -107,15 +118,10 @@
       }
     </div>
 
-    @if (scope(); as s) {
-      <p class="callout">
-        <lucide-icon [img]="Icons.info" [size]="15" />
-        <span>
-          <strong>{{ scoreLabel }}:</strong> {{ scoreHint }}
-          Só entram jogadores com pelo menos <strong>{{ s.minKills }} bosses</strong> derrotados.
-        </span>
-      </p>
-    }
+    <p class="callout">
+      <lucide-icon [img]="Icons.info" [size]="15" />
+      <span><strong>{{ scoreLabel }}:</strong> {{ scoreHint() }}</span>
+    </p>
 
     <!-- explicação completa do cálculo, recolhida por padrão pra não empurrar
          a lista pra baixo de quem já entende — mas sempre um clique de distância -->
@@ -132,7 +138,12 @@
           <p>
             <strong>Best Perf. Avg</strong> é o mesmo número que aparece no perfil de cada personagem no
             <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">AscensionLogs</a>
-            (ver a <a href="https://coa.ascensionlogs.gg/faq#what-is-a-parse" target="_blank" rel="noopener">FAQ deles</a>).
+            (ver a <a href="https://coa.ascensionlogs.gg/faq#what-is-a-parse" target="_blank" rel="noopener">FAQ deles</a>),
+            sempre de <strong>uma dificuldade específica</strong> — o site oficial não tem (nem faria sentido
+            ter) uma média combinando Ascended com Normal, por exemplo, então esta tela também não inventa uma:
+            escolha a dificuldade acima e o ranking é só dela.
+          </p>
+          <p>
             Pra cada boss que a pessoa matou, o site calcula um percentil:
             <code>percentil = 100 × (cohort_size − seu_rank) / cohort_size</code> — rank 1 vira 100, rank 2 de
             50 vira 98, e assim por diante. O "cohort" é todo mundo que já matou aquele boss naquela
@@ -140,26 +151,23 @@
             ranking no mesmo boss) — não por spec.
           </p>
           <p>
-            "Best" porque é o seu <strong>pico histórico</strong> nesse boss — só sobe (quando você melhora seu
-            próprio recorde), nunca cai só porque outra pessoa te ultrapassou. "Avg" porque o número final é a
-            <strong>média</strong> desses percentis entre todos os bosses que você matou naquela dificuldade.
-            Bate exatamente com o número mostrado no perfil de cada jogador — testamos comparando os dois.
+            O detalhe que muda tudo: <strong>o que a média divide não é sempre "quantos bosses você matou"</strong>.
+            Em <strong>Zul'Gurub</strong>, uma raid fechada de 10 bosses, a média sempre divide pelos 10 — um boss
+            não derrotado conta 0. Matar 1 boss e tirar 100 nele vira <strong>10,0</strong> na média, não 100:
+            reflete que foi um clear parcial, não um clear perfeito. Já em <strong>Dungeons</strong>, que
+            agregam dezenas de instances diferentes sem um "clear completo" definido, a média divide pelos
+            bosses que a pessoa realmente enfrentou.
           </p>
           <p>
-            Uma consequência do "cohort de todo mundo naquele boss/dificuldade": se pouca gente ainda matou
-            aquele boss numa dificuldade específica (comum no início da temporada), é fácil ser o rank 1 de um
-            grupo raso e tirar 100 com um único kill — o que não significa a mesma coisa que tirar 95 numa
-            dificuldade onde dezenas de pessoas já competiram. Por isso marcamos com
+            Mesmo assim, com poucos bosses ainda dá pra bater o topo de um grupo raso de competidores (comum
+            no início da temporada) e conseguir um percentil alto num boss só. Por isso marcamos com
             <lucide-icon class="low-sample-mark" [img]="Icons.lowSample" [size]="12" /> qualquer média que vem
-            de menos de 5 bosses — o número aparece, mas com o aviso de que é pouco confiável. A média geral do
-            jogador (que soma Zul'Gurub inteiro ou a Dungeon inteira) sofre pouco com isso, porque já é
-            ponderada pelo número de bosses de cada dificuldade.
+            de menos de 5 bosses — o número aparece, mas com o aviso de que é pouco confiável.
           </p>
           <p>
-            Só entram no ranking jogadores com um mínimo de bosses derrotados no total (mostrado no aviso
-            acima), e a lista mostrada aqui é um recorte, não o site inteiro: pegamos os melhores no geral de
-            cada categoria mais os melhores de cada spec, pra nenhuma spec ficar de fora mesmo sendo pouco
-            jogada. Os dados atualizam automaticamente a cada 2 dias.
+            A lista mostrada aqui é um recorte, não o site inteiro: pegamos os melhores no geral de cada
+            categoria mais os melhores de cada spec, pra nenhuma spec ficar de fora mesmo sendo pouco jogada.
+            Os dados atualizam automaticamente a cada 2 dias.
           </p>
         </div>
       }
@@ -179,7 +187,7 @@
     <div class="loading">
       @if (isSearching()) {
         Nenhum jogador com "{{ playerSearch() }}" neste ranking.
-        <br />Ele pode estar fora do recorte, ou em outra função/spec — tente trocar os filtros acima.
+        <br />Ele pode estar fora do recorte, ou em outra função/spec/dificuldade — tente trocar os filtros acima.
       } @else {
         Nenhum jogador nesta combinação de filtros.
       }
@@ -203,10 +211,10 @@
             <div class="podium-name">{{ p.name }}</div>
             <div class="podium-spec">{{ p.spec }} · {{ p.className }}</div>
             <div class="podium-score">
-              {{ fmt(p.score) }}%
+              {{ fmt(p.avg) }}%
               <span class="podium-score-label">{{ scoreLabel }}</span>
             </div>
-            <div class="podium-kills">{{ p.totalKills }} bosses</div>
+            <div class="podium-kills">{{ p.bossesKilled }} bosses</div>
           </div>
           <span class="podium-icon">
             @if (data.iconUrl(metaFor(p.className, p.spec)?.icon ?? null); as url) {
@@ -223,9 +231,6 @@
           <colgroup>
             <col class="col-rank" />
             <col class="col-player" />
-            @for (d of scope()!.difficulties; track d.key) {
-              <col class="col-diff" />
-            }
             <col class="col-score" />
             <col class="col-kills" />
           </colgroup>
@@ -233,11 +238,8 @@
             <tr>
               <th>#</th>
               <th>Jogador</th>
-              @for (d of scope()!.difficulties; track d.key) {
-                <th class="num">{{ d.label }}</th>
-              }
-              <th class="num" [coaTooltip]="scoreHint">{{ scoreLabel }}</th>
-              <th class="num" coaTooltip="Bosses distintos com registro, somando todas as dificuldades">Bosses</th>
+              <th class="num" [coaTooltip]="scoreHint()">{{ scoreLabel }}</th>
+              <th class="num" coaTooltip="Bosses distintos derrotados nessa dificuldade">Bosses</th>
             </tr>
           </thead>
           <tbody>
@@ -266,25 +268,20 @@
                     </span>
                   </div>
                 </td>
-                @for (d of scope()!.difficulties; track d.key) {
-                  @if (p.results[d.key]; as r) {
-                    <td class="num" [class.low-sample]="r.lowSample" [coaTooltip]="resultTooltip(p, d.key)">
-                      {{ fmt(r.avg) }}%
-                      @if (r.lowSample) {
-                        <lucide-icon class="low-sample-mark" [img]="Icons.lowSample" [size]="12" />
-                      }
-                    </td>
-                  } @else {
-                    <td class="num no-data">—</td>
-                  }
-                }
-                <td class="num score">
+                <td class="num score" [class.low-sample]="p.lowSample" [coaTooltip]="resultTooltip(p)">
                   <div class="score-cell">
                     <span class="score-bar"><span class="score-fill" [style.width]="scoreBar(p)"></span></span>
-                    <span class="score-value">{{ fmt(p.score) }}%</span>
+                    <span class="score-value">
+                      {{ fmt(p.avg) }}%
+                      @if (p.lowSample) {
+                        <lucide-icon class="low-sample-mark" [img]="Icons.lowSample" [size]="12" />
+                      }
+                    </span>
                   </div>
                 </td>
-                <td class="num kills">{{ p.totalKills }}</td>
+                <td class="num kills">
+                  {{ p.bossesKilled }}{{ p.totalBosses ? ' / ' + p.totalBosses : '' }}
+                </td>
               </tr>
             }
           </tbody>
@@ -305,7 +302,7 @@
       <p class="footnote">
         {{ players().length }} jogadores no total ·
         Dados de <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">coa.ascensionlogs.gg</a>
-        · <lucide-icon class="low-sample-mark" [img]="Icons.lowSample" [size]="12" /> = menos de 5 bosses naquela dificuldade — número menos confiável
+        · <lucide-icon class="low-sample-mark" [img]="Icons.lowSample" [size]="12" /> = menos de 5 bosses — número menos confiável
       </p>
     </section>
   }

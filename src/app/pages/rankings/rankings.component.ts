@@ -16,6 +16,14 @@ interface SpecMeta {
   color: string;
 }
 
+/** Jogador já "achatado" pra dificuldade selecionada — o que a tabela/pódio renderiza. */
+interface RankedPlayer extends RankingPlayer {
+  rank: number;
+  avg: number;
+  bossesKilled: number;
+  lowSample: boolean;
+}
+
 const PAGE_SIZE = 50;
 
 @Component({
@@ -45,6 +53,8 @@ export class RankingsComponent implements OnInit {
 
   scopeKey = signal<string>('raid-zg');
   categoryKey = signal<string>('dps');
+  /** Dificuldade específica sendo ranqueada — não existe "média entre dificuldades". */
+  difficultyKey = signal<string>('ascended');
   specFilter = signal<string>('all');
   specOpen = signal(false);
   specSearch = signal('');
@@ -64,8 +74,14 @@ export class RankingsComponent implements OnInit {
     () => this.categories().find(c => c.key === this.categoryKey()) ?? this.categories()[0] ?? null,
   );
 
+  difficulties = computed(() => this.scope()?.difficulties ?? []);
+
+  /** Zul'Gurub tem 4; Dungeons só tem Mythic — não faz sentido mostrar seletor de 1 opção só. */
+  showDifficultyPicker = computed(() => this.difficulties().length > 1);
+
   scopeIndex = computed(() => Math.max(0, this.scopes().findIndex(s => s.key === this.scope()?.key)));
   categoryIndex = computed(() => Math.max(0, this.categories().findIndex(c => c.key === this.category()?.key)));
+  difficultyIndex = computed(() => Math.max(0, this.difficulties().findIndex(d => d.key === this.difficultyKey())));
 
   /**
    * Ícone/cor de cada spec do ranking. Os nomes vêm da API de logs, que usa
@@ -152,10 +168,19 @@ export class RankingsComponent implements OnInit {
     return { spec, className: '', meta: null };
   });
 
-  /** Filtrada por spec e renumerada, pra a posição refletir o filtro escolhido. */
-  private rankedPlayers = computed(() => {
+  /**
+   * Filtrada por spec E pela dificuldade selecionada (só entra quem tem
+   * registro nela — não existe "0" pra quem não jogou aquela dificuldade,
+   * simplesmente não aparece no ranking dela), ordenada pelo Best Perf. Avg
+   * daquela dificuldade específica e renumerada.
+   */
+  private rankedPlayers = computed<RankedPlayer[]>(() => {
     const spec = this.specFilter();
-    const list = spec === 'all' ? this.playersRaw() : this.playersRaw().filter(p => p.spec === spec);
+    const diff = this.difficultyKey();
+    const list = this.playersRaw()
+      .filter(p => (spec === 'all' || p.spec === spec) && p.results[diff])
+      .map(p => ({ ...p, ...p.results[diff] }))
+      .sort((a, b) => b.avg - a.avg);
     return list.map((p, i) => ({ ...p, rank: i + 1 }));
   });
 
@@ -185,11 +210,20 @@ export class RankingsComponent implements OnInit {
   // Mesma métrica pros dois conteúdos agora — "Best Perf. Avg" bate o nome
   // exato usado no perfil de cada personagem no AscensionLogs, de propósito,
   // pra não gerar estranheza de "por que seu número não é igual o de lá".
+  // SEMPRE de uma dificuldade específica — o AscensionLogs também não tem
+  // (nem faria sentido ter) uma média combinando dificuldades diferentes.
   readonly scoreLabel = 'Best Perf. Avg';
-  readonly scoreHint =
-    'Média do percentil de cada boss (0 a 100): o quanto seu melhor resultado se compara a todo mundo que já '
-    + 'matou aquele boss naquela dificuldade — cross-class, não por spec. É o mesmo "Best Perf. Avg" que aparece '
-    + 'no perfil de cada personagem no AscensionLogs.';
+
+  scoreHint = computed(() => {
+    const isZg = this.scopeKey() === 'raid-zg';
+    return isZg
+      ? 'Média do percentil de cada boss (0 a 100) na dificuldade selecionada, dividida pelos 10 bosses da raid '
+        + '— boss não derrotado conta 0. Um clear parcial mostra um número baixo de propósito, não um número alto '
+        + 'e enganoso. É o mesmo "Best Perf. Avg" do perfil de cada personagem no AscensionLogs.'
+      : 'Média do percentil de cada boss (0 a 100) que a pessoa derrotou nessa dificuldade — aqui não existe um '
+        + '"clear completo" (são dezenas de dungeons diferentes), então a média é só dos bosses que ela realmente '
+        + 'enfrentou. Mesmo número do perfil de cada personagem no AscensionLogs.';
+  });
 
   lastUpdated = computed(() => {
     const iso = this.index()?.extractedAt;
@@ -209,6 +243,9 @@ export class RankingsComponent implements OnInit {
     ]);
     this.index.set(index);
     this.classes.set(classes);
+    // dificuldade padrão = a primeira da lista do escopo inicial (a mais alta)
+    const firstDiff = index?.scopes.find(s => s.key === this.scopeKey())?.difficulties[0]?.key;
+    if (firstDiff) this.difficultyKey.set(firstDiff);
     this.loading.set(false);
     await this.loadPlayers();
   }
@@ -232,9 +269,13 @@ export class RankingsComponent implements OnInit {
 
   setScope(key: string) {
     this.scopeKey.set(key);
+    const newScope = this.scopes().find(s => s.key === key);
     // categoria e spec podem não existir no novo conteúdo
-    const cats = this.scopes().find(s => s.key === key)?.categories ?? [];
+    const cats = newScope?.categories ?? [];
     if (!cats.some(c => c.key === this.categoryKey())) this.categoryKey.set(cats[0]?.key ?? 'dps');
+    // idem pra dificuldade (Dungeons só tem Mythic)
+    const diffs = newScope?.difficulties ?? [];
+    if (!diffs.some(d => d.key === this.difficultyKey())) this.difficultyKey.set(diffs[0]?.key ?? 'mythic');
     this.resetSpec();
     this.resetPagination();
     void this.loadPlayers();
@@ -245,6 +286,11 @@ export class RankingsComponent implements OnInit {
     this.resetSpec();
     this.resetPagination();
     void this.loadPlayers();
+  }
+
+  setDifficulty(key: string) {
+    this.difficultyKey.set(key);
+    this.resetPagination();
   }
 
   private resetSpec() {
@@ -295,12 +341,10 @@ export class RankingsComponent implements OnInit {
     if (menu && !menu.contains(ev.target as Node)) this.specOpen.set(false);
   }
 
-  profileUrl(p: RankingPlayer): string {
+  profileUrl(p: RankedPlayer): string {
     const s = this.scope();
     if (!s) return '#';
-    // manda pro perfil já na dificuldade mais alta em que ele tem registro
-    const diff = s.difficulties.find(d => p.results[d.key])?.key ?? s.difficulties[0].key;
-    return this.data.playerUrl(p.name, s.location, s.phase, diff);
+    return this.data.playerUrl(p.name, s.location, s.phase, this.difficultyKey());
   }
 
   fmt(n: number): string {
@@ -308,10 +352,10 @@ export class RankingsComponent implements OnInit {
   }
 
   /** Largura da barra do score, relativa ao 1º colocado da lista atual. */
-  scoreBar(p: RankingPlayer): string {
-    const top = this.players()[0]?.score ?? 0;
+  scoreBar(p: RankedPlayer): string {
+    const top = this.players()[0]?.avg ?? 0;
     if (!top) return '0%';
-    return `${Math.max(3, Math.round((p.score / top) * 100))}%`;
+    return `${Math.max(3, Math.round((p.avg / top) * 100))}%`;
   }
 
   toggleExplain() {
@@ -322,16 +366,14 @@ export class RankingsComponent implements OnInit {
     this.data.handleIconError(ev);
   }
 
-  resultTooltip(p: RankingPlayer, diffKey: string): string {
-    const r = p.results[diffKey];
-    if (!r) return 'Sem registro nesta dificuldade';
+  resultTooltip(p: RankedPlayer): string {
     // "1 de 10 bosses" fica estranho no singular — só usa singular quando
     // não há total pra comparar (aí sim "1 boss" faz sentido sozinho)
     const bosses = p.totalBosses
-      ? `${r.bossesKilled} de ${p.totalBosses} bosses`
-      : `${r.bossesKilled} boss${r.bossesKilled === 1 ? '' : 'es'}`;
-    const base = `${this.fmt(r.avg)}% de percentil médio em ${bosses}`;
-    if (!r.lowSample) return base;
-    return `${base} — amostra baixa: com poucos bosses, é fácil bater o topo de um grupo raso de competidores. Não é tão confiável quanto os outros números da linha.`;
+      ? `${p.bossesKilled} de ${p.totalBosses} bosses`
+      : `${p.bossesKilled} boss${p.bossesKilled === 1 ? '' : 'es'}`;
+    const base = `${this.fmt(p.avg)}% de percentil médio em ${bosses}`;
+    if (!p.lowSample) return base;
+    return `${base} — amostra baixa: ainda dá pra bater o topo de um grupo raso de competidores. Não é tão confiável quanto os outros números da lista.`;
   }
 }
