@@ -159,11 +159,17 @@ export interface TankFocusFile {
  * dificuldade por vez, escolhida na tela.
  * `lowSample` é true quando `avg` vem de poucos bosses (< 5) — ainda pode
  * acontecer de bater o topo de um grupo raso de competidores.
+ * `tiebreak` é a soma dos pontos All-Star (medida contínua de DPS/HPS bruto
+ * vs. o topo do cohort) dos mesmos bosses que entraram no `avg`. Serve só
+ * pra desempatar quando dois jogadores têm o mesmo `avg` arredondado — o
+ * percentil satura em 100 pra qualquer um que seja o topo do cohort, então
+ * ele sozinho não diferencia "o quanto" alguém ficou à frente do resto.
  */
 export interface RankingResult {
   avg: number;
   bossesKilled: number;
   lowSample: boolean;
+  tiebreak: number;
 }
 
 export interface RankingPlayer {

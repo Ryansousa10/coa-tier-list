@@ -8,6 +8,15 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: '2026-08-07',
+    title: 'Rankings: desempate por pontos All-Star quando dois jogadores empatam no Best Perf. Avg',
+    items: [
+      'Perto de 100% é comum ter mais de um jogador empatado (ex.: dois Guardians nas Dungeons, ambos 100%) sem dar pra entender por que um vem antes do outro na lista. A causa: o percentil de cada boss satura em 100 pra qualquer um que seja o #1 do cohort, não importa por quanto — dois jogadores #1 em todo boss que fizeram empatam mesmo tendo DPS/HPS bem diferente entre si.',
+      'Agora, quando o Best Perf. Avg empata, o desempate usa os pontos All-Star do próprio AscensionLogs (uma medida contínua de o quanto o DPS/HPS ficou acima do resto do cohort, já vem na mesma resposta da API que já buscávamos — nenhuma chamada extra) em vez de uma ordem arbitrária. As posições desempatadas assim ficam marcadas com um ícone, com um tooltip mostrando os pontos usados no desempate.',
+      'Esse ajuste também corrigiu casos onde a ordem entre empatados no rounding estava efetivamente errada (ex.: nas Dungeons Mythic DPS, dois jogadores empatados em 100% com 7 e 8 bosses matados apareciam fora de ordem em relação aos pontos All-Star reais de cada um).',
+    ],
+  },
+  {
+    date: '2026-08-07',
     title: 'Rankings: corrige a conta do Best Perf. Avg em Zul\'Gurub e remove a média entre dificuldades',
     items: [
       'Achamos um caso (Analli, Zul\'Gurub Mythic) onde a tela mostrava 51,2% pra quem tinha matado só 1 dos 10 bosses, enquanto o perfil real dela no AscensionLogs mostra 5,1%. A causa: dividíamos a soma dos percentis pelo número de bosses que a pessoa matou, mas em Zul\'Gurub (raid fechada de 10 bosses) o site oficial sempre divide pelos 10, contando boss não derrotado como 0 — um clear parcial tem que mostrar um número baixo, não um número alto e enganoso. A conta de Dungeons não tinha esse problema (lá não existe "clear completo", então dividir pelos bosses enfrentados já estava certo) e continua igual.',

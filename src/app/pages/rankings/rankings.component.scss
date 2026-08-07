@@ -281,7 +281,7 @@
     white-space: nowrap;
   }
 
-  .low-sample-mark { vertical-align: -1px; }
+  .low-sample-mark, .tiebreak-mark { vertical-align: -1px; }
 }
 
 @keyframes reveal {
@@ -514,6 +514,10 @@ tr.is-top .rank { color: var(--accent); }
    pra não passar a mesma credibilidade de uma amostra cheia */
 td.low-sample { color: var(--danger); cursor: help; }
 .low-sample-mark { color: var(--danger); vertical-align: -2px; margin-left: 2px; }
+
+/* posição desempatada por All-Star points — não é um problema como a amostra
+   baixa, então usa a cor de destaque em vez da cor de aviso */
+.tiebreak-mark { color: var(--accent-soft); vertical-align: -2px; margin-left: 2px; cursor: help; }
 
 /* score com barra relativa ao 1º da lista atual — flex no wrapper, não no <td> */
 .score-cell {

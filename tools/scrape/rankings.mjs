@@ -261,7 +261,15 @@ async function main() {
                 const divisor = scope.divideBy === 'zonePool' && cand.totalBosses
                   ? cand.totalBosses
                   : rows.length;
-                results[diff] = { avg: sum / divisor, bossesKilled: rows.length };
+                // Empate genuíno no percentil (ex.: dois jogadores #1 em todo
+                // boss que fizeram) não tem mais resolução pra desempatar — o
+                // percentil satura em 100 pra qualquer um que seja o topo do
+                // cohort, não importa por quanto. Os pontos All-Star (mesma
+                // resposta, sem chamada extra) são uma medida contínua de DPS/
+                // HPS bruto vs. o topo do cohort, então servem de critério de
+                // desempate mesmo quando o percentil empata.
+                const tiebreak = rows.reduce((acc, row) => acc + (row.all_star_points || 0), 0);
+                results[diff] = { avg: sum / divisor, bossesKilled: rows.length, tiebreak };
               }
             } catch (err) {
               results[diff] = { error: String(err) };

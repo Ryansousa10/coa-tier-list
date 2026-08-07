@@ -13,6 +13,7 @@ import {
   Info,
   Medal,
   RotateCcw,
+  Scale,
   Search,
   Shield,
   SlidersHorizontal,
@@ -50,6 +51,7 @@ export const Icons = {
   // avisos nos cards de spec
   lowSample: TriangleAlert,
   highVariance: Flame,
+  tiebreak: Scale,
 
   // rankings
   ranking: Trophy,

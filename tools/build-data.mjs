@@ -454,6 +454,9 @@ if (fs.existsSync(rankingsRawPath)) {
             avg: Math.round(r.avg * 10) / 10,
             bossesKilled: r.bossesKilled,
             lowSample: r.bossesKilled < LOW_SAMPLE_KILLS,
+            // critério de desempate quando dois jogadores empatam no avg
+            // arredondado (ex.: ambos 100.0%) — ver comentário em rankings.mjs
+            tiebreak: Math.round(r.tiebreak * 100) / 100,
           };
         }
         if (Object.keys(results).length === 0) continue;

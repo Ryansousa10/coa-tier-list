@@ -22,6 +22,9 @@ interface RankedPlayer extends RankingPlayer {
   avg: number;
   bossesKilled: number;
   lowSample: boolean;
+  tiebreak: number;
+  /** true quando o avg (arredondado, o que aparece na tela) empata com um vizinho no ranking. */
+  tiedDisplay: boolean;
 }
 
 const PAGE_SIZE = 50;
@@ -172,7 +175,9 @@ export class RankingsComponent implements OnInit {
    * Filtrada por spec E pela dificuldade selecionada (só entra quem tem
    * registro nela — não existe "0" pra quem não jogou aquela dificuldade,
    * simplesmente não aparece no ranking dela), ordenada pelo Best Perf. Avg
-   * daquela dificuldade específica e renumerada.
+   * daquela dificuldade específica e renumerada. Empate no avg (comum perto
+   * de 100%, onde o percentil satura) é desempatado pelos pontos All-Star —
+   * ver `tiebreak` em models.ts.
    */
   private rankedPlayers = computed<RankedPlayer[]>(() => {
     const spec = this.specFilter();
@@ -180,8 +185,14 @@ export class RankingsComponent implements OnInit {
     const list = this.playersRaw()
       .filter(p => (spec === 'all' || p.spec === spec) && p.results[diff])
       .map(p => ({ ...p, ...p.results[diff] }))
-      .sort((a, b) => b.avg - a.avg);
-    return list.map((p, i) => ({ ...p, rank: i + 1 }));
+      .sort((a, b) => b.avg - a.avg || b.tiebreak - a.tiebreak);
+    return list.map((p, i) => {
+      const prev = list[i - 1];
+      const next = list[i + 1];
+      const tiedDisplay = (!!prev && this.fmt(prev.avg) === this.fmt(p.avg))
+        || (!!next && this.fmt(next.avg) === this.fmt(p.avg));
+      return { ...p, rank: i + 1, tiedDisplay };
+    });
   });
 
   isSearching = computed(() => this.playerSearch().trim().length > 0);
@@ -372,8 +383,14 @@ export class RankingsComponent implements OnInit {
     const bosses = p.totalBosses
       ? `${p.bossesKilled} de ${p.totalBosses} bosses`
       : `${p.bossesKilled} boss${p.bossesKilled === 1 ? '' : 'es'}`;
-    const base = `${this.fmt(p.avg)}% de percentil médio em ${bosses}`;
-    if (!p.lowSample) return base;
-    return `${base} — amostra baixa: ainda dá pra bater o topo de um grupo raso de competidores. Não é tão confiável quanto os outros números da lista.`;
+    let text = `${this.fmt(p.avg)}% de percentil médio em ${bosses}`;
+    if (p.lowSample) {
+      text += ' — amostra baixa: ainda dá pra bater o topo de um grupo raso de competidores. Não é tão confiável quanto os outros números da lista.';
+    }
+    if (p.tiedDisplay) {
+      text += ` — empata (nesse arredondamento) com outra posição; desempatado por ${this.fmt(p.tiebreak)} pontos All-Star, `
+        + 'uma medida contínua de quão à frente do resto do cohort a pessoa ficou em cada boss (o percentil sozinho satura em 100 pra qualquer um que seja o topo).';
+    }
+    return text;
   }
 }

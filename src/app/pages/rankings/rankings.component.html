@@ -165,6 +165,15 @@
             de menos de 5 bosses — o número aparece, mas com o aviso de que é pouco confiável.
           </p>
           <p>
+            Perto de 100% é comum ver dois jogadores empatados: o percentil satura em 100 pra qualquer um que
+            seja o topo do cohort num boss, não importa por quanto — então dois jogadores #1 em todo boss que
+            fizeram empatam mesmo tendo tido DPS/HPS diferente. Nesses casos, o desempate usa os
+            <strong>pontos All-Star</strong> do próprio AscensionLogs (uma medida contínua do quanto o DPS/HPS
+            ficou acima do resto do cohort, não só se foi o #1). As posições desempatadas assim ficam marcadas
+            com <lucide-icon class="tiebreak-mark" [img]="Icons.tiebreak" [size]="12" /> — passe o mouse pra
+            ver os pontos usados no desempate.
+          </p>
+          <p>
             A lista mostrada aqui é um recorte, não o site inteiro: pegamos os melhores no geral de cada
             categoria mais os melhores de cada spec, pra nenhuma spec ficar de fora mesmo sendo pouco jogada.
             Os dados atualizam automaticamente a cada 2 dias.
@@ -198,7 +207,7 @@
       @for (p of podium(); track p.name + p.spec) {
         <a class="podium-card" [class]="'place-' + p.rank" [href]="profileUrl(p)" target="_blank" rel="noopener"
            [style.--class-color]="metaFor(p.className, p.spec)?.color"
-           [coaTooltip]="p.spec + ' · ' + p.className">
+           [coaTooltip]="p.tiedDisplay ? resultTooltip(p) : (p.spec + ' · ' + p.className)">
           <div class="podium-main">
             <div class="podium-rank">
               @if (p.rank === 1) {
@@ -212,6 +221,9 @@
             <div class="podium-spec">{{ p.spec }} · {{ p.className }}</div>
             <div class="podium-score">
               {{ fmt(p.avg) }}%
+              @if (p.tiedDisplay) {
+                <lucide-icon class="tiebreak-mark" [img]="Icons.tiebreak" [size]="13" />
+              }
               <span class="podium-score-label">{{ scoreLabel }}</span>
             </div>
             <div class="podium-kills">{{ p.bossesKilled }} bosses</div>
@@ -276,6 +288,9 @@
                       @if (p.lowSample) {
                         <lucide-icon class="low-sample-mark" [img]="Icons.lowSample" [size]="12" />
                       }
+                      @if (p.tiedDisplay) {
+                        <lucide-icon class="tiebreak-mark" [img]="Icons.tiebreak" [size]="12" />
+                      }
                     </span>
                   </div>
                 </td>
@@ -303,6 +318,7 @@
         {{ players().length }} jogadores no total ·
         Dados de <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">coa.ascensionlogs.gg</a>
         · <lucide-icon class="low-sample-mark" [img]="Icons.lowSample" [size]="12" /> = menos de 5 bosses — número menos confiável
+        · <lucide-icon class="tiebreak-mark" [img]="Icons.tiebreak" [size]="12" /> = posição desempatada por pontos All-Star
       </p>
     </section>
   }
