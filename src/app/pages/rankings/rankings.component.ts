@@ -324,6 +324,13 @@ export class RankingsComponent implements OnInit {
   resultTooltip(p: RankingPlayer, diffKey: string): string {
     const r = p.results[diffKey];
     if (!r) return 'Sem registro nesta dificuldade';
-    return `${this.fmt(r.points)} pontos em ${r.bossesKilled} boss${r.bossesKilled === 1 ? '' : 'es'}`;
+    // "1 de 10 bosses" fica estranho no singular — só usa singular quando
+    // não há total pra comparar (aí sim "1 boss" faz sentido sozinho)
+    const bosses = p.totalBosses
+      ? `${r.bossesKilled} de ${p.totalBosses} bosses`
+      : `${r.bossesKilled} boss${r.bossesKilled === 1 ? '' : 'es'}`;
+    const base = `${this.fmt(r.points)} pontos em ${bosses}`;
+    if (!r.lowSample) return base;
+    return `${base} — amostra baixa: com poucos bosses, é fácil bater o topo de um grupo raso de competidores. Não é tão confiável quanto os outros números da linha.`;
   }
 }

@@ -150,11 +150,15 @@ export interface TankFocusFile {
  * `avg` só existe onde a média por boss faz sentido (Zul'Gurub, pool de 10
  * bosses); em dungeons o pool tem 239 bosses e a pontuação premia cobertura,
  * então lá o ranking é por pontos totais e `avg` vem null.
+ * `lowSample` é true quando `avg` vem de menos de metade dos bosses do pool
+ * (ex.: 1 de 10) — um único boss pode bater o topo de um grupo raso de
+ * competidores e mostrar 100, o que parece mais confiável do que é.
  */
 export interface RankingResult {
   points: number;
   bossesKilled: number;
   avg: number | null;
+  lowSample: boolean;
 }
 
 export interface RankingPlayer {
@@ -163,6 +167,8 @@ export interface RankingPlayer {
   spec: string;
   results: Record<string, RankingResult>;
   totalKills: number;
+  /** Tamanho do pool de bosses do conteúdo (10 em Zul'Gurub) — usado pra explicar o lowSample. */
+  totalBosses: number | null;
   score: number;
 }
 

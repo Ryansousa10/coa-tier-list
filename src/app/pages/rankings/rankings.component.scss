@@ -270,6 +270,18 @@
   strong { color: var(--text); }
 
   a { color: var(--accent-soft); }
+
+  code {
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    color: var(--accent-soft);
+    font-size: 0.85em;
+    white-space: nowrap;
+  }
+
+  .low-sample-mark { vertical-align: -1px; }
 }
 
 @keyframes reveal {
@@ -498,6 +510,11 @@ tr.is-top .rank { color: var(--accent); }
 }
 
 .no-data { color: var(--text-dim); }
+
+/* média de poucos bosses — visualmente mais fraca que um número confiável,
+   pra não passar a mesma credibilidade de uma amostra cheia */
+td.low-sample { color: var(--danger); cursor: help; }
+.low-sample-mark { color: var(--danger); vertical-align: -2px; margin-left: 2px; }
 
 /* score com barra relativa ao 1º da lista atual — flex no wrapper, não no <td> */
 .score-cell {

@@ -456,16 +456,26 @@ if (fs.existsSync(rankingsRawPath)) {
         let totalPoints = 0;
         let totalKills = 0;
         const results = {};
+        // `bossesKilled` já é boss ÚNICO (não evento de kill — matei o mesmo
+        // boss 5x ainda conta 1), confirmado comparando com o boss-rows real
+        // de um jogador. `e.totalBosses` é o tamanho do pool (10 em Zul'Gurub,
+        // igual pras 4 dificuldades) — usamos pra marcar como "amostra baixa"
+        // a média de uma dificuldade onde a pessoa só pegou uma fração dos
+        // bosses (ex.: 1 de 10 == 100 de sorte de bracket raso, não killer
+        // consistente). Sem isso, um "100" de 1 boss parece tão confiável
+        // quanto um "95" de 10 bosses na tabela.
+        const pool = e.totalBosses || null;
         for (const [diff, r] of Object.entries(e.results)) {
           totalPoints += r.points;
           totalKills += r.bossesKilled || 0;
+          const avg = cfg.scoreKind === 'avg' && r.bossesKilled > 0
+            ? Math.round((r.points / r.bossesKilled) * 10) / 10
+            : null;
           results[diff] = {
             points: Math.round(r.points * 10) / 10,
             bossesKilled: r.bossesKilled ?? 0,
-            // média por boss só faz sentido onde o pool de bosses é pequeno
-            avg: cfg.scoreKind === 'avg' && r.bossesKilled > 0
-              ? Math.round((r.points / r.bossesKilled) * 10) / 10
-              : null,
+            avg,
+            lowSample: avg !== null && pool != null && (r.bossesKilled / pool) < 0.5,
           };
         }
         if (totalKills < cfg.minKills) continue;
@@ -478,6 +488,7 @@ if (fs.existsSync(rankingsRawPath)) {
           spec: e.spec,
           results,
           totalKills,
+          totalBosses: pool,
           score: Math.round(score * 10) / 10,
         });
       }

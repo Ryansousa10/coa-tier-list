@@ -8,6 +8,15 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: '2026-08-06',
+    title: 'Rankings: aviso de amostra baixa nas médias por dificuldade',
+    items: [
+      'Uma média vinda de poucos bosses (ex.: 100 com 1 boss só) agora aparece marcada com ⚠, porque é fácil bater o topo de um grupo raso de competidores logo no início da temporada — o número não é tão confiável quanto uma média de 10 bosses.',
+      'A seção "Como essa pontuação é calculada" foi reescrita com a fórmula oficial do AscensionLogs (tirada direto da FAQ deles): pontuação por boss é uma comparação de DPS/HPS contra o melhor de todo mundo naquele boss/dificuldade, cross-class — não por spec, como a versão anterior do texto dizia.',
+      'A média geral de cada jogador já era ponderada corretamente pelo número de bosses de cada dificuldade — esse ajuste só deixa isso visível também nas colunas por dificuldade.',
+    ],
+  },
+  {
+    date: '2026-08-06',
     title: 'Rankings mais leve: carrega só o que você está vendo',
     items: [
       'A tela de Rankings baixava as 8 listas (2 conteúdos × 4 funções) de uma vez, mesmo você só olhando uma por vez. Agora cada lista é um arquivo à parte, baixado só quando você escolhe aquela combinação — a primeira tela abre com um quarto do tamanho de antes.',
