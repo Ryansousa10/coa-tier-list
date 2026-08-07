@@ -8,6 +8,15 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: '2026-08-07',
+    title: 'Corrige a extração de itens do BisBeard (workflow automático estava falhando)',
+    items: [
+      'A atualização automática dos dados começou a falhar no sanity check ("itens (BisBeard): muito abaixo do mínimo"). Causa: o BisBeard reorganizou o site deles e reaproveitou o nome de função que usávamos pra identificar "sincronizar itens" pra uma função diferente ("limpar todos os bancos") — o scraper continuava rodando sem erro, só que esvaziando o banco de itens em vez de preenchê-lo.',
+      'Trocamos a forma de identificar as funções: em vez de confiar no nome (que muda e pode ser reaproveitado a cada deploy deles), procuramos pelo formato do código — a função de sincronizar é a que aceita um callback de progresso, a de ler é a que abre uma transação e busca tudo de uma vez. Isso sobrevive a mudança de nome bem melhor.',
+      'Também descobriram que o BisBeard mudou como guardam os itens: antes era uma lista única, agora é dividida por fase e categoria. Passamos a ler essa lista de categorias direto do banco deles, em vez de fixar a lista aqui — se eles adicionarem ou removerem uma categoria, a extração se adapta sozinha.',
+    ],
+  },
+  {
+    date: '2026-08-07',
     title: 'Rankings: desempate por pontos All-Star quando dois jogadores empatam no Best Perf. Avg',
     items: [
       'Perto de 100% é comum ter mais de um jogador empatado (ex.: dois Guardians nas Dungeons, ambos 100%) sem dar pra entender por que um vem antes do outro na lista. A causa: o percentil de cada boss satura em 100 pra qualquer um que seja o #1 do cohort, não importa por quanto — dois jogadores #1 em todo boss que fizeram empatam mesmo tendo DPS/HPS bem diferente entre si.',

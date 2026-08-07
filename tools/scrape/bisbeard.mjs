@@ -6,10 +6,27 @@
 //
 // Os nomes dos arquivos (`realmDataCoa-<hash>.js`, `itemDatabaseSync-<hash>.js`)
 // mudam a cada deploy do BisBeard, então descobrimos a URL atual observando
-// as respostas de rede da página inicial, em vez de fixar o nome. O mesmo
-// vale pros nomes das funções exportadas (minificados tipo `O`/`aX`) — como
-// hoje conhecemos eles, tentamos por nome primeiro, mas caímos pra uma busca
-// heurística se o bundle deles mudar e os nomes não baterem mais.
+// as respostas de rede da página inicial, em vez de fixar o nome.
+//
+// IMPORTANTE (incidente de 2026-08-07): os nomes minificados das funções
+// exportadas (`O`, `aX`, ...) também mudam a cada rebuild do bundle deles —
+// mas o pior é que um deploy pode REAPROVEITAR um nome minificado antigo pra
+// uma função DIFERENTE (ex.: `O`, que era a função de sync, virou uma função
+// de "limpar todos os bancos"). Isso faz o pipeline "funcionar" sem erro,
+// só que sincronizando errado (a limpeza esvazia o banco em vez de
+// preenchê-lo) — daí o sanity-check pegou uma contagem de itens bem abaixo
+// do mínimo, mas não zero, porque sobrava lixo de sincronizações anteriores
+// no IndexedDB do navegador.
+// Por isso NÃO confiamos mais em nome minificado nenhum: procuramos as
+// funções pelo formato do código-fonte delas (uma função async que aceita
+// `{onProgress}` é a de sync; uma função que abre uma `transaction` e chama
+// `getAll()` é a de leitura por store) — o comportamento é bem mais estável
+// entre builds do que o nome que o minificador escolhe.
+// Descobrimos também que o schema de armazenamento mudou: antes era um
+// array único com todos os itens; agora é uma store do IndexedDB por
+// fase+categoria (`items_<fase>_<categoria>`, ex. `items_1_raid`). Lemos a
+// lista de categorias diretamente do IndexedDB (não fixamos a lista), e
+// juntamos todas as stores da fase 1.
 //
 // Gera:
 //   tools/data/raw/bisbeard-meta.json      (classes, specs, pesos, regras)
@@ -26,9 +43,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const RAW = path.join(__dirname, '..', 'data', 'raw');
 fs.mkdirSync(RAW, { recursive: true });
 
-// Nomes conhecidos hoje (podem mudar a cada rebuild do bundle deles).
-const KNOWN_SYNC_EXPORT = 'O';
-const KNOWN_READ_EXPORT = 'aX';
+const ITEMS_PHASE = 1;
 
 async function main() {
   const browser = await chromium.launch({ headless: true });
@@ -75,41 +90,68 @@ async function main() {
 
   // ------------------------------------------------------------ itens
   console.log('[bisbeard] sincronizando banco de itens (pode levar ~15s)...');
-  const items = await page.evaluate(async ({ url, syncName, readName }) => {
+  const { items, dbName, progress } = await page.evaluate(async ({ url, phase }) => {
     const mod = await import(url);
 
-    // 1) tenta pelo nome minificado conhecido; se não bater, procura uma
-    //    função assíncrona que aceite {onProgress} (assinatura da função
-    //    de sincronização, estável mesmo se o nome minificado mudar).
-    let syncFn = typeof mod[syncName] === 'function' ? mod[syncName] : null;
-    if (!syncFn) {
-      for (const v of Object.values(mod)) {
-        if (typeof v === 'function' && /onProgress/.test(v.toString())) { syncFn = v; break; }
-      }
+    // Função de sync: identificada pelo FORMATO (aceita {onProgress}), não
+    // pelo nome minificado — nomes se repetem entre builds pra funções
+    // diferentes (ver comentário grande no topo do arquivo).
+    let syncFn = null;
+    for (const v of Object.values(mod)) {
+      if (typeof v === 'function' && /onProgress/.test(v.toString())) { syncFn = v; break; }
     }
-    if (!syncFn) throw new Error('Função de sincronização de itens não encontrada no bundle.');
-    await syncFn({});
+    if (!syncFn) throw new Error('Função de sincronização de itens não encontrada no bundle (nenhuma função aceita {onProgress}).');
 
-    // 2) idem pra leitura; se o nome não bater, chama toda função sem
-    //    argumento e usa a primeira que devolver uma lista de itens de
-    //    verdade (reconhecida pela forma: objetos com name + slot).
-    let readFn = typeof mod[readName] === 'function' ? mod[readName] : null;
-    let items = readFn ? await readFn() : null;
-    const looksLikeItems = (arr) => Array.isArray(arr) && arr.length > 1000 && arr[0] && typeof arr[0].name === 'string' && 'slot' in arr[0];
+    const dbsBefore = await indexedDB.databases();
+    const namesBefore = new Set(dbsBefore.map(d => d.name));
 
-    if (!looksLikeItems(items)) {
-      for (const v of Object.values(mod)) {
-        if (typeof v !== 'function') continue;
-        try {
-          const candidate = await v();
-          if (looksLikeItems(candidate)) { items = candidate; break; }
-        } catch { /* não é a função certa, ignora */ }
-      }
+    const progress = [];
+    await syncFn({ onProgress: (p) => progress.push(p) });
+
+    // Função de leitura por store: identificada por abrir uma `transaction`
+    // e chamar `getAll()` dentro dela — é a única com essa forma no bundle.
+    let readFn = null;
+    for (const v of Object.values(mod)) {
+      if (typeof v !== 'function') continue;
+      const src = v.toString();
+      if (/objectStoreNames/.test(src) && /getAll\(\)/.test(src)) { readFn = v; break; }
     }
-    if (!looksLikeItems(items)) throw new Error('Função de leitura de itens não encontrada ou formato inesperado no bundle.');
-    return items;
-  }, { url: itemSyncUrl, syncName: KNOWN_SYNC_EXPORT, readName: KNOWN_READ_EXPORT });
+    if (!readFn) throw new Error('Função de leitura por store não encontrada no bundle (nenhuma função usa transaction+getAll).');
 
+    // O banco (IndexedDB) recém-criado pelo sync é o que muda entre o "antes"
+    // e o "depois" — assim não fixamos o nome do banco, que também pode
+    // mudar entre deploys.
+    const dbsAfter = await indexedDB.databases();
+    const newDbs = dbsAfter.filter(d => !namesBefore.has(d.name));
+    const dbName = (newDbs[0] ?? dbsAfter[0])?.name;
+    if (!dbName) throw new Error('Nenhum IndexedDB encontrado depois do sync.');
+
+    const storeNames = await new Promise((resolve, reject) => {
+      const req = indexedDB.open(dbName);
+      req.onsuccess = () => { const names = [...req.result.objectStoreNames]; req.result.close(); resolve(names); };
+      req.onerror = () => reject(req.error);
+    });
+
+    // Schema atual: uma store por fase+categoria (`items_<fase>_<categoria>`).
+    // Lemos a lista de categorias do próprio IndexedDB em vez de fixá-la, pra
+    // não quebrar de novo se uma categoria for adicionada/removida.
+    const prefix = `items_${phase}_`;
+    const categories = storeNames.filter(n => n.startsWith(prefix)).map(n => n.slice(prefix.length));
+    if (categories.length === 0) throw new Error(`Nenhuma store "${prefix}*" encontrada (stores: ${storeNames.join(', ')}).`);
+
+    const looksLikeItems = (arr) => Array.isArray(arr) && arr.length > 0 && arr[0] && typeof arr[0].name === 'string' && 'slot' in arr[0];
+    let items = [];
+    for (const cat of categories) {
+      const rows = await readFn(phase, cat);
+      if (rows.length > 0 && !looksLikeItems(rows)) {
+        throw new Error(`Store "${prefix}${cat}" não tem o formato esperado de item (name/slot).`);
+      }
+      items = items.concat(rows);
+    }
+    return { items, dbName, progress };
+  }, { url: itemSyncUrl, phase: ITEMS_PHASE });
+
+  console.log(`  -> banco "${dbName}" sincronizado (${progress.at(-1) ?? '?'})`);
   fs.writeFileSync(path.join(RAW, 'bisbeard-items-p1.json'), JSON.stringify(items));
   console.log(`  -> ${items.length} itens`);
 
