@@ -8,6 +8,16 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: '2026-08-06',
+    title: 'Rankings: ícones das specs e busca por jogador',
+    items: [
+      'Cada jogador agora aparece com o ícone da sua spec, e o filtro de spec virou um menu com os ícones e busca — bem mais fácil de achar a spec que você quer entre as ~50 disponíveis.',
+      'Novo campo de busca pra encontrar um jogador pelo nome. A posição mostrada continua sendo a do ranking completo, então dá pra ver exatamente em que lugar você está.',
+      'Clicando no nome da spec de um jogador você vai pra página dela aqui no site.',
+      'Corrigido o alinhamento das linhas da tabela, que "sanfonavam" conforme o conteúdo de cada célula.',
+    ],
+  },
+  {
+    date: '2026-08-06',
     title: 'Nova tela: Rankings de Jogadores',
     items: [
       'Nova página de Rankings com os melhores jogadores de Zul\'Gurub e de Dungeons Mythic, separados por função (DPS, Tank, Healer e Support) e filtráveis por spec.',

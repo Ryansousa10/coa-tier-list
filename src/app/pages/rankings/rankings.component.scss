@@ -38,41 +38,179 @@
   flex-wrap: wrap;
 }
 
-/* select nativo (bom no mobile) com aparência do resto do site */
-.spec-select {
+/* ------------------------------------------------------- dropdown de spec */
+
+.spec-picker {
   position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
   margin-left: auto;
+}
 
-  select {
-    appearance: none;
-    padding: 8px 34px 8px 14px;
+.spec-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 210px;
+  padding: 7px 12px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-align: left;
+
+  &:hover, &.open { border-color: var(--accent); }
+  &:focus-visible { outline: none; box-shadow: var(--ring); }
+
+  .spec-chevron { margin-left: auto; color: var(--text-dim); transition: transform 0.24s var(--ease); }
+  &.open .spec-chevron { transform: rotate(180deg); }
+}
+
+.spec-button-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spec-icon {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #0a0d14;
+
+  img { width: 100%; height: 100%; object-fit: cover; display: block; }
+}
+
+.spec-icon-all {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+}
+
+.spec-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  width: 280px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  animation: drop-in 0.16s var(--ease);
+}
+
+@keyframes drop-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.spec-search {
+  width: 100%;
+  margin-bottom: 6px;
+  padding: 7px 10px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.82rem;
+
+  &::placeholder { color: var(--text-dim); }
+  &:focus-visible { outline: none; border-color: var(--accent); }
+}
+
+.spec-group { margin-top: 4px; }
+
+.spec-group-label {
+  display: block;
+  padding: 5px 8px 3px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+.spec-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.84rem;
+  text-align: left;
+
+  &:hover { background: var(--panel-hover); }
+
+  &.selected {
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    color: var(--accent-soft);
+    font-weight: 600;
+  }
+}
+
+.spec-empty { margin: 10px 8px; color: var(--text-dim); font-size: 0.82rem; }
+
+/* ------------------------------------------------------- busca de jogador */
+
+.player-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 220px;
+
+  input {
+    width: 100%;
+    padding: 8px 34px 8px 36px;
     background: var(--bg-alt);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     color: var(--text);
     font: inherit;
     font-size: 0.86rem;
-    font-weight: 600;
-    cursor: pointer;
-    max-width: 260px;
 
-    &:hover { border-color: var(--accent); }
-    &:focus-visible { outline: none; box-shadow: var(--ring); }
+    &::placeholder { color: var(--text-dim); }
+    &:focus-visible { outline: none; border-color: var(--accent); box-shadow: var(--ring); }
   }
-
-  optgroup { color: var(--text-dim); }
-  option { color: var(--text); background: var(--panel); font-weight: 400; }
 }
 
-.spec-chevron {
+.search-icon {
   position: absolute;
-  right: 11px;
+  left: 11px;
   color: var(--text-dim);
   pointer-events: none;
 }
+
+.search-clear {
+  position: absolute;
+  right: 8px;
+  display: inline-flex;
+  padding: 4px;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: var(--text-dim);
+
+  &:hover { color: var(--text); background: var(--panel-hover); }
+}
+
+.search-count { font-size: 0.78rem; color: var(--text-dim); }
 
 .callout {
   display: flex;
@@ -140,6 +278,20 @@
   font-size: 0.86rem;
 }
 
+.podium-icon {
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  margin-left: auto;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--class-color, var(--border));
+  background: #0a0d14;
+
+  img { width: 100%; height: 100%; object-fit: cover; display: block; }
+}
+
 .podium-name {
   font-size: 1.15rem;
   font-weight: 700;
@@ -185,7 +337,12 @@
     text-align: left;
     padding: 8px 12px;
     border-bottom: 1px solid var(--border);
+    /* altura mínima igual em todas as linhas: sem isso, a linha com ícone
+       fica mais alta que a sem, e a listagem "sanfona" ao rolar */
+    vertical-align: middle;
   }
+
+  td { height: 52px; }
 
   th {
     color: var(--text-dim);
@@ -217,13 +374,35 @@
 
 tr.is-top .rank { color: var(--accent); }
 
-.player {
+/* O flex fica num wrapper, nunca no <td>: display:flex numa célula tira ela do
+   layout de tabela e desalinha a linha inteira. */
+.player-cell {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.player-icon {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--class-color, var(--border));
+  background: #0a0d14;
+
+  img { width: 100%; height: 100%; object-fit: cover; display: block; }
+}
+
+.player-info {
   display: flex;
   flex-direction: column;
   gap: 1px;
   min-width: 0;
 
-  a {
+  > a {
     display: inline-flex;
     align-items: center;
     gap: 5px;
@@ -245,16 +424,18 @@ tr.is-top .rank { color: var(--accent); }
 
 .player-spec {
   font-size: 0.75rem;
-  color: var(--text-dim);
+  color: var(--class-color, var(--text-dim));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  &:hover { text-decoration: underline; }
 }
 
 .no-data { color: var(--text-dim); }
 
-/* score com barra relativa ao 1º da lista atual */
-.score {
+/* score com barra relativa ao 1º da lista atual — flex no wrapper, não no <td> */
+.score-cell {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -289,6 +470,9 @@ tr.is-top .rank { color: var(--accent); }
 }
 
 @media (max-width: 720px) {
-  .spec-select { margin-left: 0; width: 100%; }
-  .spec-select select { flex: 1; max-width: none; }
+  .spec-picker { margin-left: 0; width: 100%; }
+  .spec-button { flex: 1; min-width: 0; }
+  .spec-menu { width: 100%; }
+  .player-search { min-width: 0; }
+  .search-count { flex-basis: 100%; }
 }

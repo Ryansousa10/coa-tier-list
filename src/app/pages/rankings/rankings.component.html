@@ -33,20 +33,78 @@
         }
       </div>
 
-      <label class="spec-select">
+      <!-- dropdown próprio em vez de <select>: o nativo não renderiza os
+           ícones das specs, que são o que faz achar a spec de relance -->
+      <div class="spec-picker">
         <span class="field-label">Spec</span>
-        <select [value]="specFilter()" (change)="onSpecChange($event)">
-          <option value="all">Todas as specs</option>
-          @for (g of specGroups(); track g.className) {
-            <optgroup [label]="g.className">
-              @for (s of g.specs; track s) {
-                <option [value]="s">{{ s }}</option>
+        <button type="button" class="spec-button" [class.open]="specOpen()"
+                (click)="toggleSpecMenu($event)"
+                [attr.aria-expanded]="specOpen()" aria-haspopup="listbox">
+          @if (selectedSpec(); as sel) {
+            <span class="spec-icon">
+              @if (data.iconUrl(sel.meta?.icon ?? null); as url) {
+                <img [src]="url" [alt]="sel.spec" (error)="onIconError($event)" />
               }
-            </optgroup>
+            </span>
+            <span class="spec-button-label">{{ sel.spec }}</span>
+          } @else {
+            <span class="spec-button-label">Todas as specs</span>
           }
-        </select>
-        <lucide-icon class="spec-chevron" [img]="Icons.chevron" [size]="16" />
+          <lucide-icon class="spec-chevron" [img]="Icons.chevron" [size]="16" />
+        </button>
+
+        @if (specOpen()) {
+          <div class="spec-menu" role="listbox">
+            <input class="spec-search" type="text" placeholder="Buscar spec ou classe…"
+                   [value]="specSearch()" (input)="onSearch($event)" autofocus />
+
+            <button type="button" class="spec-option" [class.selected]="specFilter() === 'all'"
+                    (click)="pickSpec('all')">
+              <span class="spec-icon spec-icon-all"><lucide-icon [img]="Icons.ranking" [size]="14" /></span>
+              Todas as specs
+            </button>
+
+            @for (g of specGroupsFiltered(); track g.className) {
+              <div class="spec-group">
+                <span class="spec-group-label">{{ g.className }}</span>
+                @for (s of g.specs; track s.spec) {
+                  <button type="button" class="spec-option" [class.selected]="specFilter() === s.spec"
+                          (click)="pickSpec(s.spec)">
+                    <span class="spec-icon">
+                      @if (data.iconUrl(s.meta?.icon ?? null); as url) {
+                        <img [src]="url" [alt]="s.spec" (error)="onIconError($event)" />
+                      }
+                    </span>
+                    {{ s.spec }}
+                  </button>
+                }
+              </div>
+            } @empty {
+              <p class="spec-empty">Nenhuma spec encontrada.</p>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <label class="player-search">
+        <lucide-icon class="search-icon" [img]="Icons.search" [size]="16" />
+        <input type="text" placeholder="Buscar um jogador pelo nome…"
+               [value]="playerSearch()" (input)="onPlayerSearch($event)" />
+        @if (isSearching()) {
+          <button type="button" class="search-clear" (click)="clearPlayerSearch()"
+                  coaTooltip="Limpar a busca" aria-label="Limpar a busca">
+            <lucide-icon [img]="Icons.clear" [size]="14" />
+          </button>
+        }
       </label>
+      @if (isSearching()) {
+        <span class="search-count">
+          {{ players().length }} {{ players().length === 1 ? 'jogador encontrado' : 'jogadores encontrados' }}
+          · a posição mostrada é a do ranking completo
+        </span>
+      }
     </div>
 
     @if (scope(); as s) {
@@ -68,12 +126,20 @@
   }
 
   @if (players().length === 0) {
-    <div class="loading">Nenhum jogador nesta combinação de filtros.</div>
+    <div class="loading">
+      @if (isSearching()) {
+        Nenhum jogador com "{{ playerSearch() }}" neste ranking.
+        <br />Ele pode estar fora do recorte, ou em outra função/spec — tente trocar os filtros acima.
+      } @else {
+        Nenhum jogador nesta combinação de filtros.
+      }
+    </div>
   } @else {
     <!-- Pódio: os 3 primeiros em destaque -->
     <section class="podium">
       @for (p of podium(); track p.name + p.spec) {
-        <a class="podium-card" [class]="'place-' + p.rank" [href]="profileUrl(p)" target="_blank" rel="noopener">
+        <a class="podium-card" [class]="'place-' + p.rank" [href]="profileUrl(p)" target="_blank" rel="noopener"
+           [style.--class-color]="metaFor(p.className, p.spec)?.color">
           <div class="podium-rank">
             @if (p.rank === 1) {
               <lucide-icon [img]="Icons.first" [size]="20" />
@@ -81,6 +147,11 @@
               <lucide-icon [img]="Icons.medal" [size]="18" />
             }
             <span>{{ p.rank }}º</span>
+            <span class="podium-icon">
+              @if (data.iconUrl(metaFor(p.className, p.spec)?.icon ?? null); as url) {
+                <img [src]="url" [alt]="p.spec" (error)="onIconError($event)" />
+              }
+            </span>
           </div>
           <div class="podium-name">{{ p.name }}</div>
           <div class="podium-spec">{{ p.spec }} · {{ p.className }}</div>
@@ -120,13 +191,27 @@
             @for (p of players(); track p.name + p.spec) {
               <tr [class.is-top]="p.rank <= 3">
                 <td class="rank">{{ p.rank }}</td>
-                <td class="player">
-                  <a [href]="profileUrl(p)" target="_blank" rel="noopener"
-                     [coaTooltip]="'Abrir o perfil de ' + p.name + ' no AscensionLogs'">
-                    <span class="player-name">{{ p.name }}</span>
-                    <lucide-icon class="player-link" [img]="Icons.external" [size]="13" />
-                  </a>
-                  <span class="player-spec">{{ p.spec }} · {{ p.className }}</span>
+                <td class="player" [style.--class-color]="metaFor(p.className, p.spec)?.color">
+                  <div class="player-cell">
+                    <span class="player-icon" [coaTooltip]="p.spec + ' · ' + p.className">
+                      @if (data.iconUrl(metaFor(p.className, p.spec)?.icon ?? null); as url) {
+                        <img [src]="url" [alt]="p.spec" (error)="onIconError($event)" />
+                      }
+                    </span>
+                    <span class="player-info">
+                      <a [href]="profileUrl(p)" target="_blank" rel="noopener"
+                         [coaTooltip]="'Abrir o perfil de ' + p.name + ' no AscensionLogs'">
+                        <span class="player-name">{{ p.name }}</span>
+                        <lucide-icon class="player-link" [img]="Icons.external" [size]="13" />
+                      </a>
+                      @if (metaFor(p.className, p.spec); as m) {
+                        <a class="player-spec" [routerLink]="['/spec', m.classKey, m.specKey]"
+                           coaTooltip="Ver a página desta spec">{{ p.spec }} · {{ p.className }}</a>
+                      } @else {
+                        <span class="player-spec">{{ p.spec }} · {{ p.className }}</span>
+                      }
+                    </span>
+                  </div>
                 </td>
                 @for (d of scope()!.difficulties; track d.key) {
                   @if (p.results[d.key]; as r) {
@@ -138,8 +223,10 @@
                   }
                 }
                 <td class="num score">
-                  <span class="score-bar"><span class="score-fill" [style.width]="scoreBar(p)"></span></span>
-                  <span class="score-value">{{ fmt(p.score) }}</span>
+                  <div class="score-cell">
+                    <span class="score-bar"><span class="score-fill" [style.width]="scoreBar(p)"></span></span>
+                    <span class="score-value">{{ fmt(p.score) }}</span>
+                  </div>
                 </td>
                 <td class="num kills">{{ p.totalKills }}</td>
               </tr>

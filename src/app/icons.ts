@@ -13,6 +13,7 @@ import {
   Info,
   Medal,
   RotateCcw,
+  Search,
   Shield,
   SlidersHorizontal,
   Sparkles,
@@ -21,6 +22,7 @@ import {
   Target,
   TriangleAlert,
   Trophy,
+  X,
   Zap,
 } from 'lucide-angular';
 
@@ -54,4 +56,6 @@ export const Icons = {
   first: Crown,
   medal: Medal,
   external: ExternalLink,
+  search: Search,
+  clear: X,
 } as const;
