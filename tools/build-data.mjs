@@ -494,11 +494,23 @@ if (fs.existsSync(rankingsRawPath)) {
       const kept = players.filter(p => keep.has(p));
       if (kept.length === 0) continue;
 
+      // Os jogadores em si NÃO vão pro índice — só metadados (specs, contagem).
+      // A tela de Rankings carrega a lista de jogadores sob demanda, um
+      // arquivo por conteúdo+categoria, então trocar de aba não baixa os
+      // outros 7 conjuntos que o usuário nem está olhando. Isso também limita
+      // o crescimento: cada arquivo tem no máximo TOP_OVERALL + TOP_PER_SPEC×
+      // specsDaCategoria entradas (o recorte acima), não cresce sem fim.
+      fs.mkdirSync(path.join(OUT, 'rankings'), { recursive: true });
+      fs.writeFileSync(
+        path.join(OUT, 'rankings', `${scopeMeta.key}-${catMeta.key}.json`),
+        JSON.stringify({ players: kept }),
+      );
+
       categories.push({
         key: catMeta.key,
         label: catMeta.label,
         specs: [...new Set(kept.map(p => p.spec))].sort(),
-        players: kept,
+        playerCount: kept.length,
       });
     }
 
@@ -516,12 +528,12 @@ if (fs.existsSync(rankingsRawPath)) {
     }
   }
 
-  fs.writeFileSync(path.join(OUT, 'rankings.json'), JSON.stringify({
+  fs.writeFileSync(path.join(OUT, 'rankings-index.json'), JSON.stringify({
     extractedAt: raw.extractedAt,
     scopes,
   }));
-  const totalPlayers = scopes.reduce((n, s) => n + s.categories.reduce((m, c) => m + c.players.length, 0), 0);
-  console.log('rankings.json:', scopes.length, 'conteúdos,', totalPlayers, 'entradas');
+  const totalPlayers = scopes.reduce((n, s) => n + s.categories.reduce((m, c) => m + c.playerCount, 0), 0);
+  console.log('rankings-index.json + rankings/*.json:', scopes.length, 'conteúdos,', totalPlayers, 'entradas');
 }
 
 // -------------------------------------------------------------- tank-focus.json

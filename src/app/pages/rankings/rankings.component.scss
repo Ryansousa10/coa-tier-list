@@ -528,6 +528,33 @@ tr.is-top .rank { color: var(--accent); }
 
 .kills { color: var(--text-dim); }
 
+/* --------------------------------------------------------------- paginação */
+
+.load-more-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 14px 16px 4px;
+  flex-wrap: wrap;
+}
+
+.load-more-count { color: var(--text-dim); font-size: 0.84rem; }
+
+.load-more {
+  padding: 8px 18px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 0.86rem;
+  font-weight: 600;
+  transition: all 0.18s var(--ease);
+
+  &:hover { border-color: var(--accent); color: var(--accent-soft); }
+  &:focus-visible { outline: none; box-shadow: var(--ring); }
+}
+
 .footnote {
   margin: 12px 16px 0;
   color: var(--text-dim);

@@ -168,7 +168,9 @@
     </p>
   }
 
-  @if (players().length === 0) {
+  @if (playersLoading()) {
+    <div class="loading">Carregando jogadores…</div>
+  } @else if (players().length === 0) {
     <div class="loading">
       @if (isSearching()) {
         Nenhum jogador com "{{ playerSearch() }}" neste ranking.
@@ -234,7 +236,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (p of players(); track p.name + p.spec) {
+            @for (p of visiblePlayers(); track p.name + p.spec) {
               <tr [class.is-top]="p.rank <= 3">
                 <td class="rank">{{ p.rank }}</td>
                 <td class="player" [style.--class-color]="metaFor(p.className, p.spec)?.color">
@@ -280,8 +282,20 @@
           </tbody>
         </table>
       </div>
+
+      @if (hasMore()) {
+        <div class="load-more-row">
+          <span class="load-more-count">
+            Mostrando {{ visiblePlayers().length }} de {{ players().length }} jogadores
+          </span>
+          <button type="button" class="load-more" (click)="loadMore()">
+            Carregar mais
+          </button>
+        </div>
+      }
+
       <p class="footnote">
-        {{ players().length }} jogadores ·
+        {{ players().length }} jogadores no total ·
         Dados de <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">coa.ascensionlogs.gg</a>
       </p>
     </section>

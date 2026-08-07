@@ -8,6 +8,14 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: '2026-08-06',
+    title: 'Rankings mais leve: carrega só o que você está vendo',
+    items: [
+      'A tela de Rankings baixava as 8 listas (2 conteúdos × 4 funções) de uma vez, mesmo você só olhando uma por vez. Agora cada lista é um arquivo à parte, baixado só quando você escolhe aquela combinação — a primeira tela abre com um quarto do tamanho de antes.',
+      'A tabela agora mostra 50 jogadores por vez com um botão "Carregar mais", em vez de tudo de uma vez — evita travar o navegador em listas com centenas de jogadores. A busca continua funcionando sobre a lista inteira, não só o que já apareceu na tela.',
+    ],
+  },
+  {
+    date: '2026-08-06',
     title: 'Rankings: fontes maiores, pódio com ícone grande e explicação da pontuação',
     items: [
       'Fontes maiores em toda a tela de Rankings, pra facilitar a leitura.',

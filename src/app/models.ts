@@ -166,11 +166,18 @@ export interface RankingPlayer {
   score: number;
 }
 
+/**
+ * Metadados de uma categoria (specs disponíveis, quantos jogadores) — SEM os
+ * jogadores em si. Os jogadores de cada conteúdo+categoria vivem num arquivo
+ * à parte (`data/rankings/<scopeKey>-<categoryKey>.json`, ver `RankingPlayersFile`)
+ * carregado sob demanda pela tela, pra não baixar as 8 listas de uma vez só
+ * pra mostrar uma.
+ */
 export interface RankingCategory {
   key: string;
   label: string;
   specs: string[];
-  players: RankingPlayer[];
+  playerCount: number;
 }
 
 export interface RankingScope {
@@ -185,9 +192,15 @@ export interface RankingScope {
   categories: RankingCategory[];
 }
 
-export interface RankingsFile {
+/** data/rankings-index.json — carregado assim que a tela de Rankings abre. */
+export interface RankingsIndexFile {
   extractedAt: string;
   scopes: RankingScope[];
+}
+
+/** data/rankings/<scopeKey>-<categoryKey>.json — carregado ao trocar de aba. */
+export interface RankingPlayersFile {
+  players: RankingPlayer[];
 }
 
 export interface TierFilter {

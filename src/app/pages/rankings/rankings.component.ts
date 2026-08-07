@@ -6,7 +6,7 @@ import { DataService } from '../../data.service';
 import { TooltipDirective } from '../../tooltip.directive';
 import { SegmentedDirective } from '../../segmented.directive';
 import { Icons } from '../../icons';
-import { ClassInfo, RankingCategory, RankingPlayer, RankingScope, RankingsFile } from '../../models';
+import { ClassInfo, RankingCategory, RankingPlayer, RankingScope, RankingsIndexFile } from '../../models';
 
 /** O que a tela precisa saber de uma spec além do que vem no ranking. */
 interface SpecMeta {
@@ -15,6 +15,8 @@ interface SpecMeta {
   specKey: string;
   color: string;
 }
+
+const PAGE_SIZE = 50;
 
 @Component({
   selector: 'app-rankings',
@@ -32,9 +34,14 @@ export class RankingsComponent implements OnInit {
 
   private host = inject(ElementRef<HTMLElement>).nativeElement as HTMLElement;
 
-  file = signal<RankingsFile | null>(null);
+  /** Metadados (specs, contagens) — pequeno, carrega inteiro na entrada da tela. */
+  index = signal<RankingsIndexFile | null>(null);
   classes = signal<ClassInfo[]>([]);
   loading = signal(true);
+
+  /** Jogadores do conteúdo+categoria atual — carregado sob demanda, um arquivo por vez. */
+  private playersRaw = signal<RankingPlayer[]>([]);
+  playersLoading = signal(false);
 
   scopeKey = signal<string>('raid-zg');
   categoryKey = signal<string>('dps');
@@ -43,8 +50,9 @@ export class RankingsComponent implements OnInit {
   specSearch = signal('');
   playerSearch = signal('');
   explainOpen = signal(false);
+  visibleCount = signal(PAGE_SIZE);
 
-  scopes = computed(() => this.file()?.scopes ?? []);
+  scopes = computed(() => this.index()?.scopes ?? []);
 
   scope = computed<RankingScope | null>(
     () => this.scopes().find(s => s.key === this.scopeKey()) ?? this.scopes()[0] ?? null,
@@ -81,18 +89,34 @@ export class RankingsComponent implements OnInit {
     return map;
   });
 
+  /** Nome da spec -> nome da classe, pra agrupar o dropdown sem precisar dos jogadores carregados. */
+  private specToClass = computed(() => {
+    const map = new Map<string, string>();
+    for (const cls of this.classes()) {
+      for (const spec of cls.specs) {
+        map.set(spec.logSpecNames.base, cls.name);
+        map.set(spec.logSpecNames.dps, cls.name);
+      }
+    }
+    return map;
+  });
+
   metaFor(className: string, spec: string): SpecMeta | null {
     return this.specMeta().get(`${className}|${spec}`) ?? null;
   }
 
-  /** Specs agrupadas por classe — com ~50 specs, uma lista plana fica impossível de achar nada. */
+  /**
+   * Specs agrupadas por classe — vem do índice (`category().specs`), não dos
+   * jogadores carregados, então o dropdown já funciona antes de qualquer
+   * lista de jogadores ter sido baixada.
+   */
   specGroups = computed(() => {
     const cat = this.category();
     if (!cat) return [];
-    const byClass = new Map<string, Set<string>>();
-    for (const p of cat.players) {
-      if (!byClass.has(p.className)) byClass.set(p.className, new Set());
-      byClass.get(p.className)!.add(p.spec);
+    const byClass = new Map<string, string[]>();
+    for (const spec of cat.specs) {
+      const className = this.specToClass().get(spec) ?? cat.label;
+      (byClass.get(className) ?? byClass.set(className, []).get(className)!).push(spec);
     }
     return [...byClass.entries()]
       .map(([className, specs]) => ({
@@ -130,10 +154,8 @@ export class RankingsComponent implements OnInit {
 
   /** Filtrada por spec e renumerada, pra a posição refletir o filtro escolhido. */
   private rankedPlayers = computed(() => {
-    const cat = this.category();
-    if (!cat) return [];
     const spec = this.specFilter();
-    const list = spec === 'all' ? cat.players : cat.players.filter(p => p.spec === spec);
+    const list = spec === 'all' ? this.playersRaw() : this.playersRaw().filter(p => p.spec === spec);
     return list.map((p, i) => ({ ...p, rank: i + 1 }));
   });
 
@@ -149,6 +171,14 @@ export class RankingsComponent implements OnInit {
     return term ? list.filter(p => p.name.toLowerCase().includes(term)) : list;
   });
 
+  /**
+   * Só essa fatia vira linha na tabela — sem isso, uma categoria perto do
+   * teto do recorte (várias centenas de jogadores) jogaria centenas de nós
+   * no DOM de uma vez, mesmo a lista já vindo pronta em memória.
+   */
+  visiblePlayers = computed(() => this.players().slice(0, this.visibleCount()));
+  hasMore = computed(() => this.visibleCount() < this.players().length);
+
   /** Os 3 primeiros ganham destaque de pódio (escondido durante a busca). */
   podium = computed(() => (this.isSearching() ? [] : this.rankedPlayers().slice(0, 3)));
 
@@ -161,7 +191,7 @@ export class RankingsComponent implements OnInit {
   );
 
   lastUpdated = computed(() => {
-    const iso = this.file()?.extractedAt;
+    const iso = this.index()?.extractedAt;
     if (!iso) return null;
     const d = new Date(iso);
     return `${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
@@ -172,13 +202,31 @@ export class RankingsComponent implements OnInit {
   }
 
   async ngOnInit() {
-    const [file, classes] = await Promise.all([
-      this.data.loadRankings(),
+    const [index, classes] = await Promise.all([
+      this.data.loadRankingsIndex(),
       this.data.loadClasses(),
     ]);
-    this.file.set(file);
+    this.index.set(index);
     this.classes.set(classes);
     this.loading.set(false);
+    await this.loadPlayers();
+  }
+
+  /**
+   * Baixa a lista de jogadores do conteúdo+categoria atual. Guarda contra
+   * resposta atrasada: se o usuário já trocou de aba de novo antes desta
+   * chamada terminar, o resultado é descartado em vez de sobrescrever o que
+   * já está (corretamente) na tela.
+   */
+  private async loadPlayers() {
+    const scopeKey = this.scopeKey();
+    const categoryKey = this.categoryKey();
+    this.playersRaw.set([]);
+    this.playersLoading.set(true);
+    const file = await this.data.loadRankingPlayers(scopeKey, categoryKey);
+    if (this.scopeKey() !== scopeKey || this.categoryKey() !== categoryKey) return;
+    this.playersRaw.set(file?.players ?? []);
+    this.playersLoading.set(false);
   }
 
   setScope(key: string) {
@@ -187,11 +235,15 @@ export class RankingsComponent implements OnInit {
     const cats = this.scopes().find(s => s.key === key)?.categories ?? [];
     if (!cats.some(c => c.key === this.categoryKey())) this.categoryKey.set(cats[0]?.key ?? 'dps');
     this.resetSpec();
+    this.resetPagination();
+    void this.loadPlayers();
   }
 
   setCategory(key: string) {
     this.categoryKey.set(key);
     this.resetSpec();
+    this.resetPagination();
+    void this.loadPlayers();
   }
 
   private resetSpec() {
@@ -200,12 +252,22 @@ export class RankingsComponent implements OnInit {
     this.specOpen.set(false);
   }
 
+  private resetPagination() {
+    this.visibleCount.set(PAGE_SIZE);
+  }
+
+  loadMore() {
+    this.visibleCount.update(v => v + PAGE_SIZE);
+  }
+
   onPlayerSearch(ev: Event) {
     this.playerSearch.set((ev.target as HTMLInputElement).value);
+    this.resetPagination();
   }
 
   clearPlayerSearch() {
     this.playerSearch.set('');
+    this.resetPagination();
   }
 
   toggleSpecMenu(ev: Event) {
@@ -218,6 +280,7 @@ export class RankingsComponent implements OnInit {
     this.specFilter.set(spec);
     this.specOpen.set(false);
     this.specSearch.set('');
+    this.resetPagination();
   }
 
   onSearch(ev: Event) {

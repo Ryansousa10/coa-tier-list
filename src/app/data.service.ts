@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BisFile, BossStatsFile, ClassInfo, RankingsFile, StatsFile, TankFocusFile } from './models';
+import { BisFile, BossStatsFile, ClassInfo, RankingPlayersFile, RankingsIndexFile, StatsFile, TankFocusFile } from './models';
 
 const SOURCE_LABELS: Record<string, string> = {
   raid: 'Raid', dungeon: 'Dungeon', worldboss: 'World Boss', worldforged: 'Worldforged',
@@ -12,7 +12,8 @@ export class DataService {
   private classesPromise?: Promise<ClassInfo[]>;
   private statsPromise?: Promise<StatsFile>;
   private tankFocusPromise?: Promise<TankFocusFile | null>;
-  private rankingsPromise?: Promise<RankingsFile | null>;
+  private rankingsIndexPromise?: Promise<RankingsIndexFile | null>;
+  private rankingPlayersCache = new Map<string, Promise<RankingPlayersFile | null>>();
   private bisCache = new Map<string, Promise<BisFile | null>>();
   private bossStatsCache = new Map<string, Promise<BossStatsFile | null>>();
 
@@ -31,10 +32,26 @@ export class DataService {
     return this.tankFocusPromise;
   }
 
-  /** Só a tela de Rankings carrega — é o maior arquivo de dados do site. */
-  loadRankings(): Promise<RankingsFile | null> {
-    this.rankingsPromise ??= fetch('data/rankings.json').then(r => (r.ok ? r.json() : null)).catch(() => null);
-    return this.rankingsPromise;
+  /** Metadados dos rankings (specs, contagens) — pequeno, carrega assim que a tela abre. */
+  loadRankingsIndex(): Promise<RankingsIndexFile | null> {
+    this.rankingsIndexPromise ??= fetch('data/rankings-index.json').then(r => (r.ok ? r.json() : null)).catch(() => null);
+    return this.rankingsIndexPromise;
+  }
+
+  /**
+   * Jogadores de um conteúdo+categoria — só baixado quando o usuário escolhe
+   * essa combinação (em vez das 8 combinações de uma vez), e fica em cache
+   * pra não rebaixar ao voltar pra uma aba já vista.
+   */
+  loadRankingPlayers(scopeKey: string, categoryKey: string): Promise<RankingPlayersFile | null> {
+    const file = `${scopeKey}-${categoryKey}`;
+    if (!this.rankingPlayersCache.has(file)) {
+      this.rankingPlayersCache.set(
+        file,
+        fetch(`data/rankings/${file}.json`).then(r => (r.ok ? r.json() : null)).catch(() => null),
+      );
+    }
+    return this.rankingPlayersCache.get(file)!;
   }
 
   /** Link pro perfil do jogador no AscensionLogs. */
