@@ -14,7 +14,11 @@ permissions:
 jobs:
   refresh-data:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # O passo de rankings sozinho já levou ~25min numa extração real (~1900
+    # chamadas, uma por vez, com espaço entre elas pra não bater rate-limit
+    # da API — ver tools/scrape/rankings.mjs). 30min pro job inteiro não
+    # sobrava margem nem pros outros passos.
+    timeout-minutes: 75
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -57,7 +61,13 @@ jobs:
             mcr.microsoft.com/playwright:v1.62.1-noble \
             node tools/scrape/healer-tank-focus.mjs
 
+      # ~1900 chamadas (uma por candidato do roster, por dificuldade) pra
+      # pegar o Best Perf. Avg de cada um — a API já mostrou 429 sob carga
+      # sustentada numa extração real, e o script trata isso com retry, mas
+      # se mesmo assim falhar de vez, o build reaproveita o raw do ciclo
+      # anterior (já commitado) em vez de travar o site inteiro.
       - name: Extrair rankings de jogadores
+        continue-on-error: true
         run: |
           docker run --rm -v "$PWD:/work" -w /work \
             mcr.microsoft.com/playwright:v1.62.1-noble \

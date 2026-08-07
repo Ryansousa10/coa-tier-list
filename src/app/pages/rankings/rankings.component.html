@@ -111,7 +111,7 @@
       <p class="callout">
         <lucide-icon [img]="Icons.info" [size]="15" />
         <span>
-          <strong>{{ scoreLabel() }}:</strong> {{ scoreHint() }}
+          <strong>{{ scoreLabel }}:</strong> {{ scoreHint }}
           Só entram jogadores com pelo menos <strong>{{ s.minKills }} bosses</strong> derrotados.
         </span>
       </p>
@@ -130,34 +130,30 @@
       @if (explainOpen()) {
         <div class="explain-body">
           <p>
-            A pontuação por boss vem direto do <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">AscensionLogs</a>
-            (ver a <a href="https://coa.ascensionlogs.gg/faq#what-is-a-parse" target="_blank" rel="noopener">FAQ deles</a>):
-            <code>pontos = 100 × (seu melhor DPS/HPS ÷ o melhor de todo mundo naquele boss) ^ 0.95</code>.
-            "Todo mundo" é cross-class — um Mage e um Rogue competem pelo mesmo topo no mesmo boss — e é por
-            bracket/dificuldade/fase específicos, não por spec.
+            <strong>Best Perf. Avg</strong> é o mesmo número que aparece no perfil de cada personagem no
+            <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">AscensionLogs</a>
+            (ver a <a href="https://coa.ascensionlogs.gg/faq#what-is-a-parse" target="_blank" rel="noopener">FAQ deles</a>).
+            Pra cada boss que a pessoa matou, o site calcula um percentil:
+            <code>percentil = 100 × (cohort_size − seu_rank) / cohort_size</code> — rank 1 vira 100, rank 2 de
+            50 vira 98, e assim por diante. O "cohort" é todo mundo que já matou aquele boss naquela
+            dificuldade/bracket/fase, <strong>cross-class</strong> (um Mage e um Rogue competem pelo mesmo
+            ranking no mesmo boss) — não por spec.
           </p>
-          <ul>
-            <li>
-              <strong>Zul'Gurub</strong> tem só 10 bosses, então a <strong>média geral</strong> é a soma desses
-              pontos dividida pelo total de bosses derrotados (distintos, matar o mesmo boss de novo não conta
-              duas vezes) somando as 4 dificuldades — pondera automaticamente quem tem mais bosses cobertos.
-            </li>
-            <li>
-              <strong>Dungeons Mythic</strong> tem 239 bosses no total e ninguém roda todos, então a pontuação
-              não é uma média — são os <strong>pontos totais</strong> somados, que premiam cobertura: quanto
-              mais bosses diferentes o jogador parseia bem, mais pontos ele soma. Por isso os números de lá são
-              bem maiores e não dá pra comparar diretamente com Zul'Gurub.
-            </li>
-          </ul>
           <p>
-            Uma consequência do "topo de todo mundo naquele boss/dificuldade": se pouca gente ainda parseou
-            aquele boss numa dificuldade específica (comum no início da temporada), é fácil bater esse topo raso
-            e tirar 100 com um único kill — o que não significa a mesma coisa que tirar 95 numa dificuldade onde
-            dezenas de pessoas já competiram. Por isso marcamos com
+            "Best" porque é o seu <strong>pico histórico</strong> nesse boss — só sobe (quando você melhora seu
+            próprio recorde), nunca cai só porque outra pessoa te ultrapassou. "Avg" porque o número final é a
+            <strong>média</strong> desses percentis entre todos os bosses que você matou naquela dificuldade.
+            Bate exatamente com o número mostrado no perfil de cada jogador — testamos comparando os dois.
+          </p>
+          <p>
+            Uma consequência do "cohort de todo mundo naquele boss/dificuldade": se pouca gente ainda matou
+            aquele boss numa dificuldade específica (comum no início da temporada), é fácil ser o rank 1 de um
+            grupo raso e tirar 100 com um único kill — o que não significa a mesma coisa que tirar 95 numa
+            dificuldade onde dezenas de pessoas já competiram. Por isso marcamos com
             <lucide-icon class="low-sample-mark" [img]="Icons.lowSample" [size]="12" /> qualquer média que vem
-            de menos da metade dos bosses daquela dificuldade — o número aparece, mas com o aviso de que é pouco
-            confiável. A média geral do jogador não sofre muito com isso, porque ela já pondera pelo total de
-            bosses de cada dificuldade.
+            de menos de 5 bosses — o número aparece, mas com o aviso de que é pouco confiável. A média geral do
+            jogador (que soma Zul'Gurub inteiro ou a Dungeon inteira) sofre pouco com isso, porque já é
+            ponderada pelo número de bosses de cada dificuldade.
           </p>
           <p>
             Só entram no ranking jogadores com um mínimo de bosses derrotados no total (mostrado no aviso
@@ -207,8 +203,8 @@
             <div class="podium-name">{{ p.name }}</div>
             <div class="podium-spec">{{ p.spec }} · {{ p.className }}</div>
             <div class="podium-score">
-              {{ fmt(p.score) }}
-              <span class="podium-score-label">{{ scoreLabel() }}</span>
+              {{ fmt(p.score) }}%
+              <span class="podium-score-label">{{ scoreLabel }}</span>
             </div>
             <div class="podium-kills">{{ p.totalKills }} bosses</div>
           </div>
@@ -240,7 +236,7 @@
               @for (d of scope()!.difficulties; track d.key) {
                 <th class="num">{{ d.label }}</th>
               }
-              <th class="num" [coaTooltip]="scoreHint()">{{ scoreLabel() }}</th>
+              <th class="num" [coaTooltip]="scoreHint">{{ scoreLabel }}</th>
               <th class="num" coaTooltip="Bosses distintos com registro, somando todas as dificuldades">Bosses</th>
             </tr>
           </thead>
@@ -273,7 +269,7 @@
                 @for (d of scope()!.difficulties; track d.key) {
                   @if (p.results[d.key]; as r) {
                     <td class="num" [class.low-sample]="r.lowSample" [coaTooltip]="resultTooltip(p, d.key)">
-                      {{ fmt(r.avg !== null ? r.avg : r.points) }}
+                      {{ fmt(r.avg) }}%
                       @if (r.lowSample) {
                         <lucide-icon class="low-sample-mark" [img]="Icons.lowSample" [size]="12" />
                       }
@@ -285,7 +281,7 @@
                 <td class="num score">
                   <div class="score-cell">
                     <span class="score-bar"><span class="score-fill" [style.width]="scoreBar(p)"></span></span>
-                    <span class="score-value">{{ fmt(p.score) }}</span>
+                    <span class="score-value">{{ fmt(p.score) }}%</span>
                   </div>
                 </td>
                 <td class="num kills">{{ p.totalKills }}</td>
@@ -309,9 +305,7 @@
       <p class="footnote">
         {{ players().length }} jogadores no total ·
         Dados de <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">coa.ascensionlogs.gg</a>
-        @if (scope()?.scoreKind === 'avg') {
-          · <lucide-icon class="low-sample-mark" [img]="Icons.lowSample" [size]="12" /> = menos da metade dos bosses daquela dificuldade — número menos confiável
-        }
+        · <lucide-icon class="low-sample-mark" [img]="Icons.lowSample" [size]="12" /> = menos de 5 bosses naquela dificuldade — número menos confiável
       </p>
     </section>
   }

@@ -147,17 +147,16 @@ export interface TankFocusFile {
 
 /**
  * Ranking de jogadores — ver tools/scrape/rankings.mjs.
- * `avg` só existe onde a média por boss faz sentido (Zul'Gurub, pool de 10
- * bosses); em dungeons o pool tem 239 bosses e a pontuação premia cobertura,
- * então lá o ranking é por pontos totais e `avg` vem null.
- * `lowSample` é true quando `avg` vem de menos de metade dos bosses do pool
- * (ex.: 1 de 10) — um único boss pode bater o topo de um grupo raso de
- * competidores e mostrar 100, o que parece mais confiável do que é.
+ * `avg` é o "Best Perf. Avg" do AscensionLogs: a média do percentil (rank vs.
+ * cross-class) dos bosses derrotados naquela dificuldade — mesma fórmula pra
+ * Zul'Gurub e Dungeons, sempre 0-100.
+ * `lowSample` é true quando `avg` vem de poucos bosses (< 5) — um único boss
+ * pode bater o topo de um grupo raso de competidores e mostrar 100, o que
+ * parece mais confiável do que é.
  */
 export interface RankingResult {
-  points: number;
+  avg: number;
   bossesKilled: number;
-  avg: number | null;
   lowSample: boolean;
 }
 
@@ -191,8 +190,6 @@ export interface RankingScope {
   label: string;
   location: string;
   phase: number;
-  /** 'avg' = all-star médio por boss (0-100); 'points' = pontos totais */
-  scoreKind: 'avg' | 'points';
   minKills: number;
   difficulties: { key: string; label: string }[];
   categories: RankingCategory[];

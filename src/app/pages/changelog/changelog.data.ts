@@ -7,6 +7,15 @@ export interface ChangelogEntry {
 /** Mais recente primeiro. Adicione uma entrada no topo a cada atualização relevante. */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: '2026-08-07',
+    title: 'Rankings agora usam o Best Perf. Avg oficial do AscensionLogs',
+    items: [
+      'A pontuação mostrada nos Rankings mudou pra "Best Perf. Avg" — o mesmo número que aparece no perfil de cada jogador no AscensionLogs (a média do seu percentil de rank em cada boss, comparado com todo mundo que já matou aquele boss naquela dificuldade). Antes usávamos uma conta própria em cima dos pontos All-Star, que não batia com o que aparece no site oficial.',
+      'Agora Zul\'Gurub e Dungeons usam exatamente a mesma fórmula — antes eram critérios diferentes e os números não eram comparáveis entre os dois.',
+      'O aviso de amostra baixa (⚠) continua: com poucos bosses ainda dá pra bater o topo de um grupo raso de competidores, então esse número aparece marcado.',
+    ],
+  },
+  {
     date: '2026-08-06',
     title: 'Rankings: aviso de amostra baixa nas médias por dificuldade',
     items: [

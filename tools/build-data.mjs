@@ -418,23 +418,23 @@ if (fs.existsSync(bossStatsRawPath) && fs.existsSync(bossMetaPath)) {
 // ---------------------------------------------------------------- rankings.json
 // Ranking de jogadores por conteúdo/categoria/spec — ver tools/scrape/rankings.mjs.
 //
-// A pontuação muda de significado conforme o conteúdo, e por isso cada escopo
-// tem seu próprio jeito de ranquear:
-//   - Zul'Gurub tem 10 bosses e `bosses_killed` chega a 10, então
-//     pontos/bosses é o all-star score médio por boss (0-100) — é a "média"
-//     de verdade e é comparável entre dificuldades.
-//   - "All Dungeons" tem 239 bosses no pool e ninguém cobre todos; ali
-//     `total_points` premia COBERTURA (quantos bosses você parseou bem), e
-//     dividir por bosses inverte a ordem do próprio site. Então lá ranqueamos
-//     pelos pontos totais, que é a convenção do AscensionLogs.
+// A pontuação é o "Best Perf. Avg" que o próprio AscensionLogs mostra no
+// perfil de cada personagem: a média do percentil (rank vs. cross-class,
+// naquele boss/dificuldade/bracket/fase) dos bosses que a pessoa matou.
+// Mesma fórmula pros dois conteúdos — diferente da versão anterior, que usava
+// os pontos All-Star (soma, não média) e precisava de um critério à parte pra
+// Zul'Gurub vs. Dungeons porque os pools de boss são bem diferentes (10 vs.
+// 239). Percentil é sempre 0-100 não importa quantos bosses existem no total,
+// então agora os dois conteúdos usam exatamente a mesma conta.
 const rankingsRawPath = path.join(RAW, 'rankings-raw.json');
 if (fs.existsSync(rankingsRawPath)) {
   const raw = JSON.parse(fs.readFileSync(rankingsRawPath, 'utf8'));
 
-  const SCOPE_CONFIG = {
-    'raid-zg': { scoreKind: 'avg', minKills: 10 },
-    'dungeons-mythic': { scoreKind: 'points', minKills: 10 },
-  };
+  const MIN_KILLS = 10;
+  // "amostra baixa" é um piso absoluto de bosses distintos, não uma % do pool
+  // — pool varia demais entre Zul'Gurub (10) e Dungeons (239) pra uma fração
+  // fazer sentido nos dois. 5 é o mesmo piso já usado no resto do site.
+  const LOW_SAMPLE_KILLS = 5;
   const DIFFICULTY_LABELS = {
     ascended: 'Ascended', mythic: 'Mythic', heroic: 'Heroic', normal: 'Normal',
   };
@@ -443,8 +443,6 @@ if (fs.existsSync(rankingsRawPath)) {
 
   const scopes = [];
   for (const scopeMeta of raw.scopes) {
-    const cfg = SCOPE_CONFIG[scopeMeta.key];
-    if (!cfg) continue;
     const scopeData = raw.data[scopeMeta.key] || {};
     const categories = [];
 
@@ -453,43 +451,28 @@ if (fs.existsSync(rankingsRawPath)) {
       const players = [];
 
       for (const e of entries) {
-        let totalPoints = 0;
+        let weightedSum = 0; // soma de (percentil × bosses) de cada dificuldade
         let totalKills = 0;
         const results = {};
-        // `bossesKilled` já é boss ÚNICO (não evento de kill — matei o mesmo
-        // boss 5x ainda conta 1), confirmado comparando com o boss-rows real
-        // de um jogador. `e.totalBosses` é o tamanho do pool (10 em Zul'Gurub,
-        // igual pras 4 dificuldades) — usamos pra marcar como "amostra baixa"
-        // a média de uma dificuldade onde a pessoa só pegou uma fração dos
-        // bosses (ex.: 1 de 10 == 100 de sorte de bracket raso, não killer
-        // consistente). Sem isso, um "100" de 1 boss parece tão confiável
-        // quanto um "95" de 10 bosses na tabela.
-        const pool = e.totalBosses || null;
         for (const [diff, r] of Object.entries(e.results)) {
-          totalPoints += r.points;
-          totalKills += r.bossesKilled || 0;
-          const avg = cfg.scoreKind === 'avg' && r.bossesKilled > 0
-            ? Math.round((r.points / r.bossesKilled) * 10) / 10
-            : null;
+          if (!(r.bossesKilled > 0)) continue;
+          weightedSum += r.avg * r.bossesKilled;
+          totalKills += r.bossesKilled;
           results[diff] = {
-            points: Math.round(r.points * 10) / 10,
-            bossesKilled: r.bossesKilled ?? 0,
-            avg,
-            lowSample: avg !== null && pool != null && (r.bossesKilled / pool) < 0.5,
+            avg: Math.round(r.avg * 10) / 10,
+            bossesKilled: r.bossesKilled,
+            lowSample: r.bossesKilled < LOW_SAMPLE_KILLS,
           };
         }
-        if (totalKills < cfg.minKills) continue;
-        const score = cfg.scoreKind === 'avg'
-          ? totalPoints / totalKills          // all-star médio por boss (0-100)
-          : totalPoints;                      // convenção do site pra dungeons
+        if (totalKills < MIN_KILLS) continue;
         players.push({
           name: e.name,
           className: e.className,
           spec: e.spec,
           results,
           totalKills,
-          totalBosses: pool,
-          score: Math.round(score * 10) / 10,
+          totalBosses: e.totalBosses ?? null,
+          score: Math.round((weightedSum / totalKills) * 10) / 10,
         });
       }
 
@@ -531,8 +514,7 @@ if (fs.existsSync(rankingsRawPath)) {
         label: scopeMeta.label,
         location: scopeMeta.location,
         phase: scopeMeta.phase ?? 1,
-        scoreKind: cfg.scoreKind,
-        minKills: cfg.minKills,
+        minKills: MIN_KILLS,
         difficulties: scopeMeta.difficulties.map(d => ({ key: d, label: DIFFICULTY_LABELS[d] || d })),
         categories,
       });

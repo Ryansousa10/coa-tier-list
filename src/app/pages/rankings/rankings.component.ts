@@ -182,13 +182,14 @@ export class RankingsComponent implements OnInit {
   /** Os 3 primeiros ganham destaque de pódio (escondido durante a busca). */
   podium = computed(() => (this.isSearching() ? [] : this.rankedPlayers().slice(0, 3)));
 
-  scoreLabel = computed(() => (this.scope()?.scoreKind === 'avg' ? 'Média geral' : 'Pontos'));
-
-  scoreHint = computed(() =>
-    this.scope()?.scoreKind === 'avg'
-      ? 'Média do all-star score por boss (0 a 100), somando todas as dificuldades. É a nota média que o jogador tira em cada boss que enfrenta.'
-      : 'Pontos totais do AscensionLogs. Em dungeons a pontuação premia cobertura: quanto mais bosses diferentes o jogador parseia bem, mais pontos ele soma.',
-  );
+  // Mesma métrica pros dois conteúdos agora — "Best Perf. Avg" bate o nome
+  // exato usado no perfil de cada personagem no AscensionLogs, de propósito,
+  // pra não gerar estranheza de "por que seu número não é igual o de lá".
+  readonly scoreLabel = 'Best Perf. Avg';
+  readonly scoreHint =
+    'Média do percentil de cada boss (0 a 100): o quanto seu melhor resultado se compara a todo mundo que já '
+    + 'matou aquele boss naquela dificuldade — cross-class, não por spec. É o mesmo "Best Perf. Avg" que aparece '
+    + 'no perfil de cada personagem no AscensionLogs.';
 
   lastUpdated = computed(() => {
     const iso = this.index()?.extractedAt;
@@ -329,7 +330,7 @@ export class RankingsComponent implements OnInit {
     const bosses = p.totalBosses
       ? `${r.bossesKilled} de ${p.totalBosses} bosses`
       : `${r.bossesKilled} boss${r.bossesKilled === 1 ? '' : 'es'}`;
-    const base = `${this.fmt(r.points)} pontos em ${bosses}`;
+    const base = `${this.fmt(r.avg)}% de percentil médio em ${bosses}`;
     if (!r.lowSample) return base;
     return `${base} — amostra baixa: com poucos bosses, é fácil bater o topo de um grupo raso de competidores. Não é tão confiável quanto os outros números da linha.`;
   }
