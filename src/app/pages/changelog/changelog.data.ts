@@ -8,6 +8,15 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: '2026-08-06',
+    title: 'Rankings: fontes maiores, pódio com ícone grande e explicação da pontuação',
+    items: [
+      'Fontes maiores em toda a tela de Rankings, pra facilitar a leitura.',
+      'Os ícones de spec nos 3 primeiros colocados do pódio ficaram bem maiores e sempre centralizados à direita do card, pra bater o olho e já saber a spec de cada um.',
+      'Nova seção "Como essa pontuação é calculada", explicando por que a nota em Zul\'Gurub e em Dungeons usa contas diferentes, e por que existe um mínimo de bosses pra entrar no ranking.',
+    ],
+  },
+  {
+    date: '2026-08-06',
     title: 'Rankings: ícones das specs e busca por jogador',
     items: [
       'Cada jogador agora aparece com o ícone da sua spec, e o filtro de spec virou um menu com os ícones e busca — bem mais fácil de achar a spec que você quer entre as ~50 disponíveis.',

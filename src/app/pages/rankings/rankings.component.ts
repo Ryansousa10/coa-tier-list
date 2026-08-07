@@ -42,6 +42,7 @@ export class RankingsComponent implements OnInit {
   specOpen = signal(false);
   specSearch = signal('');
   playerSearch = signal('');
+  explainOpen = signal(false);
 
   scopes = computed(() => this.file()?.scopes ?? []);
 
@@ -247,6 +248,10 @@ export class RankingsComponent implements OnInit {
     const top = this.players()[0]?.score ?? 0;
     if (!top) return '0%';
     return `${Math.max(3, Math.round((p.score / top) * 100))}%`;
+  }
+
+  toggleExplain() {
+    this.explainOpen.set(!this.explainOpen());
   }
 
   onIconError(ev: Event) {

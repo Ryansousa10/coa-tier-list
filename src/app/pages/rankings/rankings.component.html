@@ -116,6 +116,49 @@
         </span>
       </p>
     }
+
+    <!-- explicação completa do cálculo, recolhida por padrão pra não empurrar
+         a lista pra baixo de quem já entende — mas sempre um clique de distância -->
+    <div class="explainer">
+      <button type="button" class="explain-toggle" [class.open]="explainOpen()" (click)="toggleExplain()"
+              [attr.aria-expanded]="explainOpen()">
+        <lucide-icon [img]="Icons.info" [size]="15" />
+        <span class="explain-title">Como essa pontuação é calculada</span>
+        <lucide-icon class="chevron" [img]="Icons.chevron" [size]="16" />
+      </button>
+
+      @if (explainOpen()) {
+        <div class="explain-body">
+          <p>
+            A pontuação vem do <a href="https://coa.ascensionlogs.gg" target="_blank" rel="noopener">AscensionLogs</a>,
+            mas ela significa coisas diferentes dependendo do conteúdo — por isso o cálculo muda:
+          </p>
+          <ul>
+            <li>
+              <strong>Zul'Gurub</strong> tem só 10 bosses, então dá pra tirar uma média de verdade: cada boss dá
+              um "all-star score" de 0 a 100 (quanto seu resultado se compara aos outros jogadores da mesma spec
+              naquele boss/dificuldade), e a <strong>média geral</strong> é a média desses scores somando as 4
+              dificuldades. É a nota média que o jogador tira nos bosses que enfrenta.
+            </li>
+            <li>
+              <strong>Dungeons Mythic</strong> tem 239 bosses no total e ninguém roda todos, então a pontuação
+              não é uma média — são os <strong>pontos totais</strong> do AscensionLogs, que premiam cobertura:
+              quanto mais bosses diferentes o jogador parseia bem, mais pontos ele soma. Por isso os números de
+              lá são bem maiores e não dá pra comparar diretamente com Zul'Gurub.
+            </li>
+          </ul>
+          <p>
+            Só entram no ranking jogadores com um mínimo de bosses derrotados (mostrado no aviso acima) — sem
+            isso, o topo ficaria cheio de quem tirou 100 num único boss e nunca mais voltou.
+          </p>
+          <p>
+            A lista mostrada aqui é um recorte, não o site inteiro: pegamos os melhores no geral de cada
+            categoria mais os melhores de cada spec, pra nenhuma spec ficar de fora mesmo sendo pouco jogada.
+            Os dados atualizam automaticamente a cada 2 dias.
+          </p>
+        </div>
+      }
+    </div>
   </section>
 
   @if (lastUpdated(); as updated) {
@@ -139,27 +182,30 @@
     <section class="podium">
       @for (p of podium(); track p.name + p.spec) {
         <a class="podium-card" [class]="'place-' + p.rank" [href]="profileUrl(p)" target="_blank" rel="noopener"
-           [style.--class-color]="metaFor(p.className, p.spec)?.color">
-          <div class="podium-rank">
-            @if (p.rank === 1) {
-              <lucide-icon [img]="Icons.first" [size]="20" />
-            } @else {
-              <lucide-icon [img]="Icons.medal" [size]="18" />
-            }
-            <span>{{ p.rank }}º</span>
-            <span class="podium-icon">
-              @if (data.iconUrl(metaFor(p.className, p.spec)?.icon ?? null); as url) {
-                <img [src]="url" [alt]="p.spec" (error)="onIconError($event)" />
+           [style.--class-color]="metaFor(p.className, p.spec)?.color"
+           [coaTooltip]="p.spec + ' · ' + p.className">
+          <div class="podium-main">
+            <div class="podium-rank">
+              @if (p.rank === 1) {
+                <lucide-icon [img]="Icons.first" [size]="20" />
+              } @else {
+                <lucide-icon [img]="Icons.medal" [size]="18" />
               }
-            </span>
+              <span>{{ p.rank }}º</span>
+            </div>
+            <div class="podium-name">{{ p.name }}</div>
+            <div class="podium-spec">{{ p.spec }} · {{ p.className }}</div>
+            <div class="podium-score">
+              {{ fmt(p.score) }}
+              <span class="podium-score-label">{{ scoreLabel() }}</span>
+            </div>
+            <div class="podium-kills">{{ p.totalKills }} bosses</div>
           </div>
-          <div class="podium-name">{{ p.name }}</div>
-          <div class="podium-spec">{{ p.spec }} · {{ p.className }}</div>
-          <div class="podium-score">
-            {{ fmt(p.score) }}
-            <span class="podium-score-label">{{ scoreLabel() }}</span>
-          </div>
-          <div class="podium-kills">{{ p.totalKills }} bosses</div>
+          <span class="podium-icon">
+            @if (data.iconUrl(metaFor(p.className, p.spec)?.icon ?? null); as url) {
+              <img [src]="url" [alt]="p.spec" (error)="onIconError($event)" />
+            }
+          </span>
         </a>
       }
     </section>
